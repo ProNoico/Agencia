@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Cuenta - Terraquio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100">
+    <header class="bg-white shadow-sm">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+             <a href="index.html">
+                <img class="h-16" src="recursos/Logo Terraquio_Mesa de trabajo 1.png" alt="Terraquio">
+            </a>
+            <div>
+                <span id="user-email" class="text-sm text-gray-600 mr-4"></span>
+                <button id="logout-button" class="text-sm font-semibold text-red-600 hover:text-red-800">Cerrar Sesión</button>
+            </div>
+        </div>
+    </header>
+    <main class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold text-gray-800">Mis Reservas</h1>
+        <div id="reservas-container" class="mt-8 space-y-6">
+            <p>Cargando reservas...</p>
+        </div>
+    </main>
+    <script>
+        const SUPABASE_URL = 'https://rwndahfhxxasuwycfjug.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3bmRhaGZoeHhhc3V3eWNmanVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwMzA3MjUsImV4cCI6MjA2ODYwNjcyNX0.gZCP_LDl_WDqnhIIDHdqa-kWsDkYpxJ6RQxZcPtC0ZQ';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const userEmailEl = document.getElementById('user-email');
+        const logoutButton = document.getElementById('logout-button');
+        const reservasContainer = document.getElementById('reservas-container');
+
+        const fetchReservas = async () => {
+            // Gracias a RLS, esta simple consulta solo traerá las reservas del usuario logueado
+            const { data: reservas, error } = await supabase.from('reservas').select('*');
+
+            if (error) {
+                reservasContainer.innerHTML = '<p class="text-red-500">Error al cargar tus reservas.</p>';
+                console.error(error);
+                return;
+            }
+
+            if (reservas.length === 0) {
+                reservasContainer.innerHTML = '<p class="text-gray-500">Aún no tienes ninguna reserva.</p>';
+                return;
+            }
+
+            reservasContainer.innerHTML = reservas.map(reserva => `
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">${reserva.paquete_nombre}</h2>
+                            <p class="text-sm text-gray-500 mt-1">Fecha de reserva: ${new Date(reserva.fecha_reserva).toLocaleDateString()}</p>
+                        </div>
+                        <span class="text-sm font-semibold py-1 px-3 rounded-full 
+                            ${reserva.estado === 'Confirmada' ? 'bg-green-100 text-green-800' :
+                              reserva.estado === 'Pendiente' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'}">
+                            ${reserva.estado}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const { data: { session }, error } = await supabase.auth.getSession();
+
+            if (!session) {
+                // Si no hay sesión, proteger la página y redirigir al login
+                window.location.href = 'login.html';
+                return;
+            }
+
+            userEmailEl.textContent = session.user.email;
+            await fetchReservas();
+        });
+
+        logoutButton.addEventListener('click', async () => {
+            await supabase.auth.signOut();
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>

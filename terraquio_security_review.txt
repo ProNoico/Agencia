@@ -1,0 +1,100 @@
+Revisión de Seguridad del Sitio Web Terraquio
+
+Fecha de Revisión: miércoles, 23 de julio de 2025
+
+Resumen General de Seguridad:
+La seguridad del sitio web Terraquio depende en gran medida de la configuración de Row Level Security (RLS) en Supabase, ya que la clave ANON está expuesta en el cliente en todos los archivos. Las vulnerabilidades más críticas identificadas son las de Cross-Site Scripting (XSS) y la potencial falta de autorización adecuada (IDOR) si el RLS no está configurado correctamente.
+
+---
+
+Detalles por Archivo:
+
+1.  admin/dashboard.html
+    *   Exposición de SUPABASE_ANON_KEY: La clave está expuesta en el cliente. Asegúrate de que todas las operaciones sensibles en Supabase estén protegidas por políticas de Row Level Security (RLS).
+    *   Control de roles en el cliente: La verificación de roles en el cliente (profile?.role !== 'admin') no es una medida de seguridad. Es crucial implementar RLS completo en Supabase para todas las tablas y funciones RPC (destacados, reservas, profiles, get_all_users, get_all_reservas_with_emails) para asegurar que solo los administradores puedan realizar acciones administrativas.
+    *   Falta de validación de entrada en el servidor: La validación del lado del cliente (required) es insuficiente. Implementa validación en el servidor (restricciones de base de datos, triggers o funciones de Supabase) para precio, iconos y otros campos.
+    *   Seguridad en la carga de imágenes: La función uploadImage sube archivos directamente. Configura políticas de seguridad en Supabase Storage para limitar el tamaño y tipo de archivos, y valida el Content-Type en el servidor.
+    *   Inyección SQL (RPC calls): Asegúrate de que las funciones PostgreSQL get_all_users y get_all_reservas_with_emails usen consultas parametrizadas para prevenir inyecciones SQL si manejan entrada de usuario.
+
+2.  admin/index.html
+    *   Exposición de SUPABASE_ANON_KEY: La clave está expuesta, lo cual es normal para el uso de Supabase en el cliente, pero subraya la necesidad de políticas RLS robustas.
+    *   Proceso de inicio de sesión: Se utiliza supabase.auth.signInWithPassword(), que es el método seguro de Supabase para la autenticación.
+    *   Redirección post-login: Tras el inicio de sesión, se redirige a dashboard.html. Es crucial que dashboard.html implemente una verificación de autorización robusta (basada en RLS) para asegurar que solo los administradores accedan y realicen acciones.
+    *   Mensajes de error: El mensaje de error genérico es adecuado para evitar la enumeración de usuarios.
+    *   Gestión de sesiones: Supabase maneja correctamente las sesiones.
+
+3.  chat.html
+    *   Vulnerabilidad de Cross-Site Scripting (XSS): La función addMessage usa innerHTML para insertar texto. Si en el futuro se permite la entrada directa del usuario, esto podría ser una vulnerabilidad crítica de XSS.
+        *   Recomendación: Sanitiza o escapa siempre la entrada del usuario antes de insertarla en el DOM. Usa textContent para texto plano o una librería de sanitización para HTML enriquecido.
+    *   Divulgación de información (vía resumen de WhatsApp): La función talkToHuman crea un resumen de WhatsApp con chatState.userData. Asegúrate de no recopilar ni transmitir información personal altamente sensible sin consentimiento explícito y medidas de seguridad adecuadas.
+    *   Sin integración directa con Supabase: Este archivo no interactúa directamente con Supabase, por lo que la exposición de la clave ANON no es una preocupación aquí.
+
+4.  index.html
+    *   Exposición de SUPABASE_ANON_KEY: La clave está expuesta, lo que reitera la necesidad de políticas RLS robustas en el backend.
+    *   Vulnerabilidad crítica de Cross-Site Scripting (XSS) en crearTarjeta: La función crearTarjeta inserta directamente datos de Supabase (destino.nombre, destino.precio, destino.descripcion, destino.detalles, destino.imagen_url, iconos) en el HTML usando innerHTML sin sanitización. Si estos datos contienen contenido malicioso, se ejecutará en el navegador del usuario.
+        *   Recomendación: Sanitiza todos los datos obtenidos de la base de datos antes de insertarlos en innerHTML. Para texto plano, usa textContent. Para HTML enriquecido, usa una librería de sanitización (ej. DOMPurify). Además, asegúrate de que el RLS en la tabla destacados sea estricto para prevenir la inyección de datos maliciosos.
+    *   Vulnerabilidad menor de Redirección Abierta: El campo de búsqueda no es directamente explotable ahora, pero si se usa para construir URLs sin validación, podría llevar a una redirección abierta.
+        *   Recomendación: Si se usa para redirecciones, valida y lista blanca los dominios permitidos.
+    *   Recursos externos (CDNs): Se cargan scripts y estilos de CDNs.
+        *   Recomendación: Usa Subresource Integrity (SRI) para scripts críticos para proteger contra manipulaciones del CDN.
+
+5.  login.html
+    *   Exposición de SUPABASE_ANON_KEY: Consistente con otros archivos, la clave está expuesta. La seguridad depende de las políticas RLS de Supabase.
+    *   Autenticación y Registro con Supabase: Se utilizan los métodos seguros de Supabase (signInWithPassword, signUp).
+        *   Recomendación: Configura políticas de contraseña y confirmación de correo electrónico en Supabase.
+    *   Confirmación de contraseña (solo cliente): La validación es solo del lado del cliente.
+        *   Recomendación: Asegúrate de que las políticas de contraseña de Supabase sean lo suficientemente robustas en el backend.
+    *   Mensajes de error: Los mensajes de error de inicio de sesión son genéricos (bueno). Los de registro exponen el mensaje de error de Supabase.
+        *   Recomendación: Haz los mensajes de error de registro más genéricos en producción para evitar la fuga de información.
+    *   Vulnerabilidad de redirección abierta (menor): El parámetro redirectTo en la URL puede ser explotado para redirigir a sitios maliciosos.
+        *   Recomendación: Implementa una lista blanca de URLs o dominios permitidos para redirectTo.
+
+6.  mi-cuenta.html
+    *   Exposición de SUPABASE_ANON_KEY: La clave está expuesta, lo que subraya la dependencia de RLS.
+    *   Autenticación y Autorización: La página protege el acceso no autenticado. El comentario sobre RLS es clave.
+        *   Vulnerabilidad (si RLS está mal configurado): Si el RLS en la tabla reservas no filtra por auth.uid(), podría haber una vulnerabilidad de Insecure Direct Object Reference (IDOR), permitiendo a los usuarios ver reservas ajenas.
+        *   Recomendación: Verifica y aplica RLS estricto en la tabla reservas de Supabase para que solo se muestren las reservas del usuario autenticado.
+    *   Vulnerabilidad crítica de Cross-Site Scripting (XSS) en fetchReservas: La función inserta datos de reserva.paquete_nombre, reserva.fecha_reserva y reserva.estado directamente en el HTML usando innerHTML sin sanitización. Esto permite la ejecución de código malicioso si los datos contienen scripts.
+        *   Recomendación: Sanitiza todos los datos obtenidos de la base de datos antes de insertarlos en innerHTML. Usa textContent para texto plano o una librería de sanitización para HTML.
+
+7.  reserva.html
+    *   Exposición de SUPABASE_ANON_KEY: La clave está expuesta, lo que implica que la seguridad depende de RLS.
+    *   Autenticación y Autorización: La página verifica la sesión y redirige si no hay una, y usa session.user.id para el user_id de la reserva, lo cual es correcto.
+    *   Cross-Site Scripting (XSS) en paqueteTituloEl: Se usa textContent para mostrar el nombre del paquete, lo cual es una buena práctica para prevenir XSS.
+    *   Validación de entrada (solo cliente): Los campos del formulario tienen required, pero la validación es solo del lado del cliente.
+        *   Vulnerabilidad: Sin validación en el servidor, se podrían insertar datos inválidos o maliciosos.
+        *   Recomendación: Implementa validación en el servidor (restricciones de base de datos, triggers o funciones de Supabase) para todos los campos de la tabla reservas.
+    *   Insecure Direct Object Reference (IDOR) - paqueteId: El paqueteId se toma directamente de la URL.
+        *   Vulnerabilidad: Si se usara para modificar o eliminar paquetes sin controles de autorización adecuados, sería un IDOR.
+        *   Recomendación: Asegura que las políticas RLS en la tabla destacados sean robustas para cualquier operación que involucre paqueteId.
+    *   Manejo de errores para la inserción en Supabase: El mensaje de alerta expone error.message.
+        *   Recomendación: En producción, haz los mensajes de error más genéricos para evitar la fuga de detalles internos.
+
+8.  reset-password.html
+    *   Exposición de SUPABASE_ANON_KEY: Consistente con otros archivos.
+    *   Mecanismo de restablecimiento de contraseña: Utiliza supabase.auth.updateUser(), que es seguro si el flujo de correo electrónico de restablecimiento de contraseña de Supabase es robusto.
+        *   Punto crucial: La seguridad depende de la integridad del flujo de restablecimiento de contraseña de Supabase (tokens, caducidad, seguridad del correo electrónico).
+        *   Recomendación: Asegúrate de que los tokens de restablecimiento sean largos, aleatorios y con un tiempo de caducidad corto.
+    *   Validación de entrada (solo cliente): El campo de contraseña tiene required.
+        *   Recomendación: La validación del lado del cliente no es una medida de seguridad. Asegúrate de que las políticas de contraseña de Supabase sean lo suficientemente robustas en el backend.
+    *   Mensajes de error: El mensaje de error expone error.message.
+        *   Recomendación: En producción, haz los mensajes de error más genéricos para evitar la fuga de información.
+
+---
+
+Prioridades de Acción:
+
+1.  Vulnerabilidades de Cross-Site Scripting (XSS):
+    *   ACCIÓN INMEDIATA REQUERIDA. Sanitiza o escapa siempre los datos antes de insertarlos en el DOM con innerHTML. Usa textContent para texto plano o una librería de sanitización.
+2.  Insecure Direct Object Reference (IDOR) / Autorización insuficiente (Dependencia de comprobaciones del lado del cliente):
+    *   ACCIÓN CRÍTICA REQUERIDA. Implementa y prueba rigurosamente las políticas de Row Level Security (RLS) en Supabase para todas las tablas sensibles (destacados, reservas, profiles) y funciones RPC.
+
+---
+
+Recomendaciones Adicionales:
+
+*   Implementa validación de entrada en el servidor para todos los datos enviados por el usuario.
+*   Haz los mensajes de error más genéricos en producción para evitar la fuga de detalles internos.
+*   Implementa una lista blanca de URLs de redirección permitidas para el parámetro 'redirectTo'.
+*   Configura políticas de seguridad estrictas en Supabase Storage y valida los tipos de contenido en el servidor para la carga de imágenes.
+*   Considera usar Subresource Integrity (SRI) para scripts críticos cargados desde CDNs.

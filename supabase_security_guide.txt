@@ -1,0 +1,153 @@
+Guía para Configuración de Seguridad en Supabase (Backend)
+
+Fecha: miércoles, 23 de julio de 2025
+
+---
+
+### 1. Configuración de Row Level Security (RLS) en Supabase
+
+**¿Qué es RLS y por qué es crucial?**
+RLS te permite crear políticas de seguridad a nivel de fila en tu base de datos. Esto significa que puedes controlar exactamente qué filas de datos pueden ser accedidas, insertadas, actualizadas o eliminadas por cada usuario, basándose en su rol, ID de usuario o cualquier otra lógica. Es fundamental porque, aunque tu clave `ANON_KEY` esté expuesta en el cliente, RLS asegura que los usuarios solo puedan interactuar con los datos para los que tienen permiso, incluso si intentan manipular las solicitudes directamente.
+
+**Pasos para configurar RLS en Supabase:**
+
+1.  **Habilitar RLS para las tablas sensibles:**
+    *   Ve a tu proyecto Supabase.
+    *   Navega a "Authentication" > "Policies" (o "Database" > "Table Editor" y luego selecciona la tabla y haz clic en "Policies").
+    *   Para las tablas `destacados`, `reservas` y `profiles`, asegúrate de que RLS esté habilitado. Si no lo está, actívalo.
+
+2.  **Crear políticas de RLS:**
+
+    *   **Para la tabla `profiles` (si almacenas roles de usuario):**
+        *   **Política para que los usuarios puedan leer su propio perfil:**
+            *   **Name:** `Enable users to read their own profile`
+            *   **Target Roles:** `anon`, `authenticated`
+            *   **USING expression:** `auth.uid() = id` (asumiendo que `id` es la columna de ID de usuario en tu tabla `profiles`)
+        *   **Política para que los administradores puedan leer y actualizar todos los perfiles:**
+            *   **Name:** `Enable admins to manage all profiles`
+            *   **Target Roles:** `authenticated`
+            *   **USING expression (para SELECT):** `(select role from profiles where id = auth.uid()) = 'admin'`
+            *   **WITH CHECK expression (para UPDATE):** `(select role from profiles where id = auth.uid()) = 'admin'`
+
+    *   **Para la tabla `destacados` (paquetes):**
+        *   **Política para que todos puedan leer paquetes:**
+            *   **Name:** `Enable read access for all users`
+            *   **Target Roles:** `anon`, `authenticated`
+            *   **USING expression:** `true` (permite leer a todos)
+        *   **Política para que solo los administradores puedan crear, actualizar y eliminar paquetes:**
+            *   **Name:** `Enable admins to manage packages`
+            *   **Target Roles:** `authenticated`
+            *   **USING expression (para SELECT, INSERT, UPDATE, DELETE):** `(select role from profiles where id = auth.uid()) = 'admin'`
+            *   **WITH CHECK expression (para INSERT, UPDATE):** `(select role from profiles where id = auth.uid()) = 'admin'` (esto asegura que solo los administradores puedan insertar/actualizar datos que cumplan con esta condición, aunque en este caso es redundante si la política de `USING` ya lo restringe).
+
+    *   **Para la tabla `reservas`:**
+        *   **Política para que los usuarios puedan leer sus propias reservas:**
+            *   **Name:** `Enable users to read their own bookings`
+            *   **Target Roles:** `authenticated`
+            *   **USING expression:** `auth.uid() = user_id` (asumiendo que `user_id` es la columna que relaciona la reserva con el usuario)
+        *   **Política para que los usuarios puedan crear reservas (para sí mismos):**
+            *   **Name:** `Enable users to create their own bookings`
+            *   **Target Roles:** `authenticated`
+            *   **USING expression:** `true`
+            *   **WITH CHECK expression:** `auth.uid() = user_id` (asegura que solo puedan crear reservas asociadas a su propio ID de usuario)
+        *   **Política para que los administradores puedan gestionar todas las reservas:**
+            *   **Name:** `Enable admins to manage all bookings`
+            *   **Target Roles:** `authenticated`
+            *   **USING expression (para SELECT, INSERT, UPDATE, DELETE):** `(select role from profiles where id = auth.uid()) = 'admin'`
+            *   **WITH CHECK expression (para INSERT, UPDATE):** `(select role from profiles where id = auth.uid()) = 'admin'`
+
+    *   **Para las funciones RPC (`get_all_users`, `get_all_reservas_with_emails`):**
+        *   Las funciones RPC en Supabase se ejecutan con los permisos del usuario que las llama. Si quieres que solo los administradores puedan ejecutar estas funciones, debes añadir una comprobación de rol dentro de la función PL/pgSQL.
+        *   **Ejemplo (dentro de la función `get_all_users`):**
+            ```sql
+            CREATE OR REPLACE FUNCTION public.get_all_users()
+            RETURNS SETOF public.profiles
+            LANGUAGE plpgsql
+            SECURITY DEFINER -- Importante para que la función pueda acceder a datos que el usuario no podría directamente
+            AS $function$
+            BEGIN
+              IF (SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin' THEN
+                RETURN QUERY SELECT * FROM public.profiles;
+              ELSE
+                RAISE EXCEPTION 'Acceso denegado. Solo administradores pueden ver todos los usuarios.';
+              END IF;
+            END;
+            $function$;
+            ```
+            *Repite un patrón similar para `get_all_reservas_with_emails` si quieres restringir su acceso solo a administradores.*
+
+### 2. Validación de Entrada en el Servidor
+
+La validación del lado del cliente es para la experiencia del usuario, no para la seguridad. La validación del lado del servidor es esencial para proteger tu base de datos de datos maliciosos o incorrectos.
+
+**Opciones en Supabase:**
+
+1.  **Restricciones de Base de Datos (Constraints):**
+    *   **`NOT NULL`**: Asegura que un campo no esté vacío.
+    *   **`CHECK` Constraints**: Define reglas personalizadas para los valores de una columna.
+        *   **Ejemplo (para `precio` en `destacados`):** `ALTER TABLE destacados ADD CONSTRAINT check_precio_positivo CHECK (precio >= 0);`
+        *   **Ejemplo (para `estado` en `reservas`):** `ALTER TABLE reservas ADD CONSTRAINT check_estado_valido CHECK (estado IN ('Pendiente', 'Confirmada', 'Pagada', 'Cancelada'));`
+    *   **Tipos de datos correctos**: Asegúrate de que las columnas tengan el tipo de dato más restrictivo posible (ej. `INT` para números, `TEXT` para cadenas, `BOOLEAN` para booleanos).
+
+2.  **Triggers de Base de Datos (PL/pgSQL):**
+    *   Para validaciones más complejas que involucren múltiples columnas o lógica de negocio, puedes crear funciones PL/pgSQL y asociarlas a triggers `BEFORE INSERT` o `BEFORE UPDATE`.
+    *   **Ejemplo (pseudocódigo para validar `iconos` en `destacados`):**
+        ```sql
+        CREATE OR REPLACE FUNCTION validate_package_icons()
+        RETURNS TRIGGER AS $$
+        BEGIN
+          IF NEW.iconos IS NOT NULL AND NOT (NEW.iconos::jsonb ?& ARRAY['plane', 'hotel', 'car']) THEN -- Ejemplo: validar que los iconos sean de una lista predefinida
+            RAISE EXCEPTION 'Iconos no válidos proporcionados.';
+          END IF;
+          RETURN NEW;
+        END;
+        $$ LANGUAGE plpgsql;
+
+        CREATE TRIGGER trg_validate_package_icons
+        BEFORE INSERT OR UPDATE ON destacados
+        FOR EACH ROW EXECUTE FUNCTION validate_package_icons();
+        ```
+
+### 3. Seguridad en la Carga de Imágenes (Supabase Storage)
+
+Supabase Storage te permite definir políticas de seguridad similares a RLS para tus buckets de almacenamiento.
+
+**Pasos para configurar políticas de Storage:**
+
+1.  **Navega a Supabase Storage:**
+    *   En tu proyecto Supabase, ve a "Storage".
+    *   Selecciona el bucket donde se suben las imágenes (ej. `imagenes-web`).
+    *   Haz clic en "Policies".
+
+2.  **Crear políticas de Storage:**
+
+    *   **Política para que solo los usuarios autenticados puedan subir imágenes a una carpeta específica (ej. `destacados/`):**
+        *   **Name:** `Allow authenticated users to upload to 'destacados' folder`
+        *   **Target Operations:** `INSERT`
+        *   **Target Roles:** `authenticated`
+        *   **WITH CHECK expression:** `bucket_id = 'imagenes-web' AND starts_with(name, 'destacados/')`
+        *   **USING expression:** `(select role from profiles where id = auth.uid()) = 'admin'` (para restringir solo a administradores)
+
+    *   **Política para que todos puedan leer imágenes públicas:**
+        *   **Name:** `Allow public read access`
+        *   **Target Operations:** `SELECT`
+        *   **Target Roles:** `anon`, `authenticated`
+        *   **USING expression:** `true` (si las imágenes son públicas)
+
+3.  **Validación de tipo de archivo y tamaño:**
+    *   Aunque las políticas de Storage pueden restringir el acceso, la validación del tipo de archivo (MIME type) y el tamaño debe hacerse idealmente en el servidor (si tienes un backend personalizado) o, en el caso de Supabase, puedes confiar en las políticas de Storage para el tamaño máximo y en la validación del lado del cliente para el tipo (aunque no es seguro por sí sola).
+    *   Supabase Storage tiene una opción para establecer un tamaño máximo de archivo por bucket.
+
+### 4. Configuración del Flujo de Restablecimiento de Contraseña de Supabase
+
+Supabase maneja la mayor parte de la seguridad del restablecimiento de contraseña internamente (generación de tokens, caducidad, etc.). Sin embargo, puedes configurar algunos aspectos:
+
+1.  **Configuración de Autenticación en Supabase:**
+    *   Ve a "Authentication" > "Settings".
+    *   **"Email Templates"**: Personaliza las plantillas de correo electrónico para el restablecimiento de contraseña. Asegúrate de que el enlace de restablecimiento sea claro y no contenga información sensible.
+    *   **"Security"**: Revisa las opciones relacionadas con la seguridad de la autenticación, como la duración de los tokens de sesión y otras configuraciones de seguridad. Asegúrate de que los tokens de restablecimiento de contraseña tengan una caducidad razonable (corta).
+
+2.  **Protección contra ataques de fuerza bruta:**
+    *   Supabase tiene mecanismos de limitación de tasa (rate limiting) incorporados para los intentos de inicio de sesión y restablecimiento de contraseña. Confía en estos mecanismos.
+
+Al implementar estas medidas en Supabase, mejorarás significativamente la seguridad de tu aplicación, moviendo las comprobaciones críticas del lado del cliente al lado del servidor y la base de datos.

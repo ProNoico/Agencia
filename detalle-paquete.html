@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Detalle del Paquete - Terraquio</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Muli:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        .tab-button {
+            transition: all 0.2s ease-in-out;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-button.active, .tab-button:hover {
+            background-color: #033E4C;
+            color: white;
+            border-bottom: 2px solid #A4D4CC;
+        }
+        .card-related-package { background-color: #374151; }
+        .terms-modal {
+            position: fixed; z-index: 200; left: 0; top: 0; width: 100%; height: 100%;
+            overflow: auto; background-color: rgba(0,0,0,0.6); display: flex;
+            justify-content: center; align-items: center;
+        }
+        .terms-modal-content {
+            background-color: #fefefe; margin: auto; padding: 20px;
+            border-radius: 8px; width: 90%; max-width: 500px;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+            position: relative; animation-name: animatetop; animation-duration: 0.4s;
+        }
+        @keyframes animatetop { from {top: -300px; opacity: 0} to {top: 0; opacity: 1} }
+        .terms-close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
+        .terms-close-button:hover, .terms-close-button:focus {
+            color: black; text-decoration: none; cursor: pointer;
+        }
+    </style>
+</head>
+<body class="bg-white">
+
+    <header class="bg-white shadow-md fixed top-0 w-full z-50">
+        <div class="container mx-auto px-6">
+            <div class="flex items-center justify-between py-3">
+                <div class="flex-shrink-0">
+                    <a href="index.html"> <img src="recursos/Logo Terraquio_Mesa de trabajo 1.png" alt="Logo Terraquio" class="h-16 md:h-20">
+                    </a>
+                </div>
+                <nav class="hidden lg:flex items-center justify-center flex-grow">
+                    <div class="flex items-center space-x-6">
+                        <a href="index.html" class="text-brand-dark-blue hover:text-brand-light-teal font-bold text-sm uppercase">INICIO</a>
+                        <a href="index.html#destacados" class="text-brand-dark-blue hover:text-brand-light-teal font-bold text-sm uppercase">DESTACADOS</a>
+                        <a href="index.html#grupales" class="text-brand-dark-blue hover:text-brand-light-teal font-bold text-sm uppercase">GRUPALES</a>
+                        <a href="index.html#busca-destino" class="text-brand-dark-blue hover:text-brand-light-teal font-bold text-sm uppercase">DESTINOS</a>
+                        <a href="quinceaneras.html" class="text-brand-dark-blue hover:text-brand-light-teal font-bold text-sm uppercase">QUINCEAÑERAS</a>
+                        <a href="index.html#nosotros" class="text-brand-dark-blue hover:text-brand-light-teal font-bold text-sm uppercase">NOSOTROS</a>
+                        <a href="index.html#contacto" class="text-brand-dark-blue hover:text-brand-light-teal font-bold text-sm uppercase">CONTACTO</a>
+                    </div>
+                </nav>
+                <div id="header-actions" class="hidden lg:flex items-center space-x-4 header-actions flex-shrink-0">
+                    <a href="https://wa.me/5493416790064" target="_blank" class="text-brand-dark-blue hover:text-green-500">
+                        <i class="fab fa-whatsapp text-2xl"></i>
+                    </a>
+                    <span id="auth-links"></span>
+                </div>
+                <div class="lg:hidden">
+                    <button id="mobile-menu-button" class="text-gray-600 focus:outline-none">
+                        <i class="fa fa-bars text-3xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+         <div id="mobile-menu" class="hidden lg:hidden px-6 pb-4 border-t bg-white">
+            <a href="index.html" class="block py-2 text-sm text-gray-700 hover:bg-brand-light-teal hover:text-brand-dark-blue rounded">INICIO</a>
+            <a href="index.html#destacados" class="block py-2 text-sm text-gray-700 hover:bg-brand-light-teal hover:text-brand-dark-blue rounded">DESTACADOS</a>
+            <a href="index.html#grupales" class="block py-2 text-sm text-gray-700 hover:bg-brand-light-teal hover:text-brand-dark-blue rounded">GRUPALES</a>
+            <a href="index.html#busca-destino" class="block py-2 text-sm text-gray-700 hover:bg-brand-light-teal hover:text-brand-dark-blue rounded">DESTINOS</a>
+            <a href="quinceaneras.html" class="block py-2 text-sm text-gray-700 hover:bg-brand-light-teal hover:text-brand-dark-blue rounded">QUINCEAÑERAS</a>
+            <a href="index.html#nosotros" class="block py-2 text-sm text-gray-700 hover:bg-brand-light-teal hover:text-brand-dark-blue rounded">NOSOTROS</a>
+            <a href="index.html#contacto" class="block py-2 text-sm text-gray-700 hover:bg-brand-light-teal hover:text-brand-dark-blue rounded">CONTACTO</a>
+            <div class="mt-4 border-t pt-4 flex items-center space-x-4">
+                 <a href="https://wa.me/5493416790064" target="_blank" class="text-brand-dark-blue hover:text-green-500"><i class="fab fa-whatsapp text-2xl"></i></a>
+                 <span id="auth-links-mobile"></span>
+            </div>
+        </div>
+    </header>
+    
+    <main class="py-10">
+        <div class="container mx-auto px-6">
+            <section class="bg-white rounded-lg shadow-lg p-4 md:p-8">
+                <div id="loading-message" class="text-center py-10 text-xl text-gray-600">Cargando detalles del paquete...</div>
+                <div id="not-found-message" class="text-center py-10 text-xl text-red-500 hidden">Paquete no encontrado.</div>
+
+                <div id="package-detail-content" class="hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-8 mb-8 items-start">
+                        <div class="md:col-span-3">
+                            <img id="detail-image" src="" alt="Imagen del Paquete" class="w-full h-auto rounded-lg shadow-md object-cover">
+                        </div>
+                        <div class="md:col-span-2 flex flex-col justify-between h-full">
+                            <div>
+                                <h1 id="detail-title" class="text-3xl md:text-4xl font-black text-brand-dark-blue mb-1"></h1>
+                                 <p id="detail-subtitle" class="text-md font-semibold text-brand-dark-blue mb-4 uppercase"></p>
+                                 <p id="detail-price" class="text-4xl md:text-5xl font-black text-brand-light-teal mb-4"></p>
+                                <div class="grid grid-cols-1 gap-y-2 mb-4">
+                                    <div class="p-2 bg-brand-neutral rounded-lg"><strong class="text-brand-dark-blue block text-sm">Transporte:</strong><span id="detail-transport" class="text-gray-800 text-sm"></span></div>
+                                    <div class="p-2 bg-brand-neutral rounded-lg"><strong class="text-brand-dark-blue block text-sm">Noches:</strong><span id="detail-nights" class="text-gray-800 text-sm"></span></div>
+                                    <div class="p-2 bg-brand-neutral rounded-lg"><strong class="text-brand-dark-blue block text-sm">Régimen:</strong><span id="detail-regimen" class="text-gray-800 text-sm"></span></div>
+                                    <div class="p-2 bg-brand-neutral rounded-lg"><strong class="text-brand-dark-blue block text-sm">Fechas:</strong><span id="detail-dates" class="text-gray-800 text-sm"></span></div>
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-center space-y-3 w-full mt-6">
+                                <a id="detail-pdf-link" href="#" target="_blank" class="hidden bg-brand-dark-blue text-brand-light-teal font-bold py-3 px-6 rounded-full hover:bg-opacity-90 transition text-center">Descargar Itinerario (PDF)</a>
+                                <a id="detail-whatsapp-button" href="#" target="_blank" class="text-center font-bold py-3 px-6 rounded-full transition-opacity hover:opacity-90" style="background-color: #A4D4CC; color: #033E4C;"><i class="fab fa-whatsapp mr-2"></i>Contactar con un Asesor</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-full border-b border-gray-200 mb-6 mt-8">
+                        <nav class="-mb-px flex space-x-4 md:space-x-8 overflow-x-auto" aria-label="Tabs">
+                                    <button id="tab-fechas-tarifas-btn" class="tab-button inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500 whitespace-nowrap">Fechas y Tarifas</button>
+                                    <button id="tab-info-general-btn" class="tab-button inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500 whitespace-nowrap">Información General</button>
+                                    <button id="tab-relacionados-btn" class="tab-button inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500 whitespace-nowrap">Otros Destinos en&nbsp;<span id="related-region-name"></span></button>
+                                    </nav>
+                   </div>
+
+                    <div id="tab-content-info-general" class="tab-content w-full hidden p-4"></div>
+                    <div id="tab-content-fechas-tarifas" class="tab-content w-full mt-6 hidden">
+                        <h3 class="text-xl font-bold text-brand-dark-blue mb-3">Fechas y Tarifas Disponibles</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-300">
+                                <thead>
+                                    <tr>
+                                        <th scope="col" class="py-2 pl-3 pr-3 text-left text-xs font-semibold text-gray-900 sm:pl-0">FECHA</th>
+                                        <th scope="col" class="px-3 py-2 text-left text-xs font-semibold text-gray-900">NOCHES</th>
+                                        <th scope="col" class="px-3 py-2 text-left text-xs font-semibold text-brand-dark-blue">HOTEL</th>
+                                        <th scope="col" class="px-3 py-2 text-left text-xs font-semibold text-brand-dark-blue">RÉGIMEN</th>
+                                        <th scope="col" class="px-3 py-2 text-left text-xs font-semibold text-brand-dark-blue">BASE</th>
+                                        <th scope="col" class="px-3 py-2 text-left text-xs font-semibold text-gray-900">TARIFA</th>
+                                        <th scope="col" class="px-3 py-2 text-left text-xs font-semibold text-gray-900"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tarifas-table-body" class="divide-y divide-gray-200 text-xs"></tbody>
+                            </table>
+                        </div>
+                        <p id="no-tarifas-message" class="text-center text-gray-600 mt-4 hidden">No hay fechas ni tarifas disponibles para este paquete.</p>
+                    </div>
+                    <div id="tab-content-relacionados" class="tab-content w-full hidden mt-6">
+                        <h3 class="text-xl font-bold text-brand-dark-blue mb-3">Otros Destinos en <span id="related-region-name-title"></span></h3>
+                        <div id="related-packages-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4"></div>
+                        <p id="no-related-packages-message" class="text-center text-gray-600 mt-4 hidden">No hay otros destinos relacionados en esta región.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer id="contacto" class="bg-brand-dark-blue text-white mt-16">
+        <div class="container mx-auto px-6 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
+                <div class="mb-6 md:mb-0">
+                    <h3 class="text-2xl font-bold">terraquio</h3>
+                    <p class="text-sm text-gray-400 mt-1">Empresa de Viajes y Turismo Leg. 12345</p>
+                    <p class="mt-4 text-gray-300"><i class="fas fa-map-marker-alt mr-2"></i>H. Irigoyen 1877, San Lorenzo, Santa Fe, Argentina</p>
+                    <p class="mt-2 text-gray-300"><i class="fas fa-phone mr-2"></i>+54 341 679-0064</p>
+                </div>
+                <div class="mb-6 md:mb-0">
+                    <h4 class="font-bold text-lg">Accesos Rápidos</h4>
+                    <ul class="mt-4 space-y-2">
+                        <li><a href="index.html#destacados" class="text-gray-300 hover:text-white">Destacados</a></li>
+                        <li><a href="index.html#busca-destino" class="text-gray-300 hover:text-white">Destinos</a></li>
+                        <li><a href="index.html#grupales" class="text-gray-300 hover:text-white">Salidas Grupales</a></li>
+                        <li><a href="index.html#contacto" class="text-gray-300 hover:text-white">Contacto</a></li>
+                    </ul>
+                </div>
+                <div class="mb-6 md:mb-0">
+                    <h4 class="font-bold text-lg">Otros Enlaces</h4>
+                    <ul class="mt-4 space-y-2">
+                        <li><a href="#" class="text-gray-300 hover:text-white">Ministerio de Turismo</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white">Declaración de Manifiestos</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white">Acceso Agente</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-lg">Seguinos</h4>
+                    <div class="flex space-x-4 mt-4 justify-center md:justify-start">
+                        <a href="#" class="text-gray-300 hover:text-white text-2xl"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-gray-300 hover:text-white text-2xl"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-gray-300 hover:text-white text-2xl"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-gray-300 hover:text-white text-2xl"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-6 text-center text-sm text-gray-400">
+                <p>© 2024 Terraquio Viajes. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <div id="termsConditionsModal" class="terms-modal hidden">
+        <div class="terms-modal-content bg-white p-6 rounded-lg shadow-xl relative">
+            <span class="terms-close-button absolute top-2 right-4 text-gray-600 hover:text-gray-900 cursor-pointer text-3xl">&times;</span>
+            <h3 class="text-2xl font-bold text-brand-dark-blue mb-4 text-center">Términos y Condiciones</h3>
+            <p class="text-gray-700 mb-4 text-center">Para continuar con la solicitud de reserva, por favor, acepta nuestros términos y condiciones.</p>
+            <div class="flex items-center mb-6 justify-center">
+                <input type="checkbox" id="acceptTerms" class="form-checkbox h-5 w-5 text-blue-600">
+                <label for="acceptTerms" class="ml-2 text-gray-800 text-sm">Acepto los <a href="terminos-condiciones.html" target="_blank" class="text-blue-600 hover:underline font-semibold">Términos y Condiciones</a></label>
+            </div>
+            <div class="flex justify-center">
+                <button id="confirmReserveButton" class="bg-brand-dark-blue text-white font-bold py-2 px-6 rounded-full hover:bg-opacity-90 transition text-sm uppercase opacity-50 cursor-not-allowed" disabled>Confirmar Solicitud</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. CONFIGURACIÓN DE SUPABASE ---
+        const SUPABASE_URL = 'https://rwndahfhxxasuwycfjug.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3bmRhaGZoeHhhc3V3eWNmanVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwMzA3MjUsImV4cCI6MjA2ODYwNjcyNX0.gZCP_LDl_WDqnhIIDHdqa-kWsDkYpxJ6RQxZcPtC0ZQ';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // --- 2. Elementos del DOM ---
+        const detailWhatsappButton = document.getElementById('detail-whatsapp-button');
+        const detailImage = document.getElementById('detail-image');
+        const detailTitle = document.getElementById('detail-title');
+        const detailSubtitle = document.getElementById('detail-subtitle');
+        const detailPrice = document.getElementById('detail-price');
+        const detailPdfLink = document.getElementById('detail-pdf-link');
+        const loadingMessage = document.getElementById('loading-message');
+        const notFoundMessage = document.getElementById('not-found-message');
+        const packageDetailContent = document.getElementById('package-detail-content');
+        const pageTitle = document.getElementById('page-title');
+        const tabInfoGeneralBtn = document.getElementById('tab-info-general-btn');
+        const tabFechasTarifasBtn = document.getElementById('tab-fechas-tarifas-btn');
+        const tabRelacionadosBtn = document.getElementById('tab-relacionados-btn');
+        const tabContentInfoGeneral = document.getElementById('tab-content-info-general');
+        const tabContentFechasTarifas = document.getElementById('tab-content-fechas-tarifas');
+        const tabContentRelacionados = document.getElementById('tab-content-relacionados');
+        const tarifasTableBody = document.getElementById('tarifas-table-body');
+        const noTarifasMessage = document.getElementById('no-tarifas-message');
+        const relatedPackagesContainer = document.getElementById('related-packages-container');
+        const noRelatedPackagesMessage = document.getElementById('no-related-packages-message');
+        const relatedRegionName = document.getElementById('related-region-name');
+        const relatedRegionNameTitle = document.getElementById('related-region-name-title');
+        const termsConditionsModal = document.getElementById('termsConditionsModal');
+        const termsCloseButton = termsConditionsModal.querySelector('.terms-close-button');
+        const acceptTermsCheckbox = document.getElementById('acceptTerms');
+        const confirmReserveButton = document.getElementById('confirmReserveButton');
+        let currentReservationDetails = null;
+        let currentPackageDetails = null;
+
+        // --- 3. LÓGICA DE AUTENTICACIÓN Y MENÚ MÓVIL ---
+        const authLinksContainer = document.getElementById('auth-links');
+        const authLinksMobileContainer = document.getElementById('auth-links-mobile');
+        supabase.auth.onAuthStateChange((event, session) => {
+            const userLoggedIn = !!session;
+            const authHtml = userLoggedIn
+                ? `<a href="mi-cuenta.html" class="bg-brand-dark-blue text-white font-bold py-2 px-4 rounded-full hover:bg-opacity-90 transition text-xs uppercase">MI CUENTA</a>`
+                : `<a href="login.html" class="bg-brand-dark-blue text-white font-bold py-2 px-4 rounded-full hover:bg-opacity-90 transition text-xs uppercase">INICIAR SESIÓN</a>`;
+            if (authLinksContainer) authLinksContainer.innerHTML = authHtml;
+            if (authLinksMobileContainer) authLinksMobileContainer.innerHTML = authHtml.replace('py-2 px-4', 'py-2 px-4 w-full text-center block');
+        });
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        if (mobileMenuButton && mobileMenu) {
+            mobileMenuButton.addEventListener('click', () => {
+                if (mobileMenu) mobileMenu.classList.toggle('hidden');
+            });
+        }
+
+        // --- 4. FUNCIONES AUXILIARES ---
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+            document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
+            const tabToShow = document.getElementById(tabId);
+            if (tabToShow) tabToShow.classList.remove('hidden');
+            const activeBtn = document.getElementById(tabId.replace('content', 'btn'));
+            if (activeBtn) activeBtn.classList.add('active');
+        }
+
+        function crearTarjetaRelacionada(destino, tipo) {
+            const imageUrl = destino.imagen_url || '';
+            const detailPageUrl = `detalle-paquete.html?id=${destino.id}&type=${tipo}`;
+            return `
+                <div class="card-related-package rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-2 transition-transform duration-300">
+                    <a href="${detailPageUrl}">
+                        <img class="w-full h-32 object-cover cursor-pointer" src="${imageUrl}" alt="Imagen de ${destino.nombre}">
+                    </a>
+                    <div class="p-3">
+                        <h4 class="text-md font-bold text-white">${destino.nombre}</h4>
+                        <p class="text-lg font-black text-brand-light-teal mt-1">${destino.precio}</p>
+                    </div>
+                </div>`;
+        }
+
+        function requestReserve(paqueteId, tarifaId, fechaSalida, noches) {
+            currentReservationDetails = { paqueteId, tarifaId, fechaSalida, noches };
+            if (termsConditionsModal) termsConditionsModal.classList.remove('hidden');
+            if (acceptTermsCheckbox) acceptTermsCheckbox.checked = false;
+            if (confirmReserveButton) {
+                confirmReserveButton.disabled = true;
+                confirmReserveButton.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        // --- 5. LÓGICA DEL MODAL ---
+        if (termsCloseButton) {
+            termsCloseButton.addEventListener('click', () => termsConditionsModal.classList.add('hidden'));
+            termsConditionsModal.addEventListener('click', (event) => {
+                if (event.target === termsConditionsModal) termsConditionsModal.classList.add('hidden');
+            });
+            acceptTermsCheckbox.addEventListener('change', () => {
+                confirmReserveButton.disabled = !acceptTermsCheckbox.checked;
+                confirmReserveButton.classList.toggle('opacity-50', !acceptTermsCheckbox.checked);
+                confirmReserveButton.classList.toggle('cursor-not-allowed', !acceptTermsCheckbox.checked);
+            });
+            confirmReserveButton.addEventListener('click', async () => {
+                if (!acceptTermsCheckbox.checked || !currentReservationDetails || !currentPackageDetails) return;
+
+                const reservationData = { ...currentReservationDetails, ...currentPackageDetails };
+                localStorage.setItem('pendingReservation', JSON.stringify(reservationData));
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) {
+                    window.location.href = `login.html?redirect_to=reserva.html`;
+                } else {
+                    window.location.href = 'reserva.html';
+                }
+            });
+        }
+
+        // --- 6. LÓGICA PRINCIPAL DE CARGA ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const packageId = urlParams.get('id');
+            const packageType = urlParams.get('type') || 'destacados';
+
+            if (!packageId) {
+                loadingMessage.classList.add('hidden');
+                notFoundMessage.classList.remove('hidden');
+                pageTitle.textContent = "Error - Paquete no encontrado";
+                return;
+            }
+
+            let packageTable, tariffTable, relatedPackageType;
+
+            switch (packageType) {
+                case 'grupales':
+                    packageTable = 'grupales_paquetes';
+                    tariffTable = 'grupales_tarifas';
+                    relatedPackageType = 'grupales';
+                    break;
+                case 'regionales':
+                    packageTable = 'regiones_paquetes';
+                    tariffTable = 'regiones_paquetes_tarifas';
+                    relatedPackageType = 'regionales';
+                    break;
+                case 'eventos':
+                    packageTable = 'eventos_paquetes';
+                    tariffTable = 'eventos_tarifas';
+                    relatedPackageType = 'eventos';
+                    break;
+                default:
+                    packageTable = 'destacados';
+                    tariffTable = 'paquete_tarifas';
+                    relatedPackageType = 'destacados';
+            }
+
+            const { data: paquete, error } = await supabase
+                .from(packageTable)
+                .select('*')
+                .eq('id', packageId)
+                .single();
+
+            loadingMessage.classList.add('hidden');
+
+            if (error || !paquete) {
+                console.error('Error al cargar detalles del paquete:', error || 'Paquete no encontrado');
+                notFoundMessage.classList.remove('hidden');
+            } else {
+                currentPackageDetails = { nombre: paquete.nombre, precio: paquete.precio };
+                pageTitle.textContent = `${paquete.nombre} - Terraquio`;
+                detailImage.src = paquete.imagen_url || '';
+                detailTitle.textContent = paquete.nombre || 'Paquete Desconocido';
+                
+                if (paquete.subtitulo) {
+                    detailSubtitle.textContent = paquete.subtitulo;
+                    detailSubtitle.classList.remove('hidden');
+                } else {
+                    detailSubtitle.classList.add('hidden');
+                }
+                
+                detailPrice.textContent = paquete.precio || '$ N/A';
+                
+                const whatsappNumber = '543476606001';
+                const whatsappMessage = `Hola, quiero más información sobre el paquete "${paquete.nombre}"`;
+                detailWhatsappButton.href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+                
+                let formattedDate = 'No especificadas';
+                if (paquete.fechas) {
+                    const date = new Date(paquete.fechas + 'T00:00:00');
+                    if (!isNaN(date.getTime())) {
+                        formattedDate = date.toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' });
+                    }
+                }
+                
+                document.getElementById('detail-transport').textContent = paquete.transporte || 'No especificado';
+                document.getElementById('detail-nights').textContent = paquete.noches || 'No especificado';
+                document.getElementById('detail-regimen').textContent = paquete.regimen || 'No especificado';
+                document.getElementById('detail-dates').textContent = formattedDate;
+
+                if (paquete.pdf_url) {
+                    detailPdfLink.href = paquete.pdf_url;
+                    detailPdfLink.classList.remove('hidden');
+                }
+                
+                packageDetailContent.classList.remove('hidden');
+
+                // --- INICIO DE LA CORRECCIÓN ---
+
+                // 1. Preparar contenido de Información General
+                let serviciosHtml;
+                if (Array.isArray(paquete.servicios) && paquete.servicios.length > 0) {
+                    serviciosHtml = `<ul class="list-disc list-inside text-gray-700 leading-relaxed text-sm">${paquete.servicios.map(servicio => `<li>${servicio}</li>`).join('')}</ul>`;
+                } else {
+                    serviciosHtml = `<p class="text-gray-700 leading-relaxed text-sm">${paquete.servicios || 'No especificados'}</p>`;
+                }
+                const infoGeneralContentHTML = `<div class="mb-6">
+                                    <strong class="text-brand-dark-blue block mb-1 text-sm">Descripción Detallada:</strong>
+                                    <p class="text-gray-700 leading-relaxed text-sm">${paquete.descripcion || 'Sin descripción detallada.'}</p>
+                                </div>
+                                <div class="mb-8">
+                                    <strong class="text-brand-dark-blue block mb-1 text-sm">Servicios Incluidos:</strong>
+                                    ${serviciosHtml}
+                                </div>`;
+                
+                // 2. Asignar el contenido al DIV correcto (ESTA LÍNEA FALTABA)
+                tabContentInfoGeneral.innerHTML = infoGeneralContentHTML;
+
+                // 3. Preparar contenido de Fechas y Tarifas
+                let hasTariffs = false;
+                if (tariffTable) {
+                    const { data: tarifas, error: tarifasError } = await supabase.from(tariffTable).select('*').eq('paquete_id', packageId).order('fecha_salida', { ascending: true });
+                    if (!tarifasError && tarifas && tarifas.length > 0) {
+                        hasTariffs = true;
+                        tarifasTableBody.innerHTML = tarifas.map(tarifa => {
+                            const tarifaFecha = new Date(tarifa.fecha_salida + 'T00:00:00');
+                            return `
+                            <tr>
+                                <td class="whitespace-nowrap py-2 pl-3 pr-3 text-left text-xs font-medium text-gray-900 sm:pl-0">${tarifaFecha.toLocaleDateString('es-AR')}</td>
+                                <td class="whitespace-nowrap px-3 py-2 text-left text-xs text-brand-dark-blue font-semibold">${tarifa.noches}</td>
+                                <td class="whitespace-nowrap px-3 py-2 text-left text-xs text-brand-dark-blue font-semibold">${tarifa.hotel_url ? `<a href="${tarifa.hotel_url}" target="_blank" class="hover:underline">${tarifa.hotel_nombre}</a>` : tarifa.hotel_nombre}</td>
+                                <td class="whitespace-nowrap px-3 py-2 text-left text-xs text-brand-dark-blue font-semibold">${tarifa.regimen}</td>
+                                <td class="whitespace-nowrap px-3 py-2 text-left text-xs text-brand-dark-blue font-semibold">${tarifa.base || 'N/A'}</td>
+                                <td class="whitespace-nowrap px-3 py-2 text-left text-xs text-gray-900 font-semibold">${tarifa.tarifa} ${tarifa.moneda}</td>
+                                <td class="whitespace-nowrap px-3 py-2 text-left text-xs">
+                                    <button class="bg-brand-dark-blue text-white py-1 px-2 rounded-full text-xs uppercase reserve-tariff-btn" data-paquete-id="${packageId}" data-tarifa-id="${tarifa.id}" data-fecha-salida="${tarifa.fecha_salida}" data-noches="${tarifa.noches}">Solicitar Reserva</button>
+                                </td>
+                            </tr>`;
+                        }).join('');
+                        document.querySelectorAll('.reserve-tariff-btn').forEach(button => {
+                            button.addEventListener('click', (e) => requestReserve(e.target.dataset.paqueteId, e.target.dataset.tarifaId, e.target.dataset.fechaSalida, e.target.dataset.noches));
+                        });
+                    }
+                }
+                
+                if (!hasTariffs) noTarifasMessage.classList.remove('hidden');
+                
+                // 4. Preparar contenido de Paquetes Relacionados
+                const regionField = packageType === 'regionales' ? 'continente' : 'region';
+                const regionValue = paquete[regionField];
+
+                if (regionValue && relatedPackagesContainer) {
+                    // Si el paquete tiene una región, la mostramos y buscamos relacionados
+                    relatedRegionName.textContent = regionValue;
+                    relatedRegionNameTitle.textContent = regionValue;
+                    
+                    const { data: relacionados } = await supabase
+                        .from(packageTable)
+                        .select('*')
+                        .eq(regionField, regionValue)
+                        .neq('id', packageId) // No mostrar el paquete actual
+                        .limit(6);
+
+                    if (relacionados && relacionados.length > 0) {
+                        relatedPackagesContainer.innerHTML = relacionados.map(rel => crearTarjetaRelacionada(rel, relatedPackageType)).join('');
+                        noRelatedPackagesMessage.classList.add('hidden'); // Ocultamos el mensaje de "no hay"
+                    } else {
+                        // Hay una región, pero no hay otros paquetes en ella. Mostramos el mensaje.
+                        noRelatedPackagesMessage.classList.remove('hidden');
+                    }
+                } else {
+                    // Si el paquete NO tiene una región, ocultamos la pestaña por completo
+                    // ya que no hay criterio para buscar relacionados.
+                    if(tabRelacionadosBtn) tabRelacionadosBtn.classList.add('hidden');
+                }
+
+                // 5. Asignar eventos y mostrar la pestaña correcta
+                tabFechasTarifasBtn.addEventListener('click', () => showTab('tab-content-fechas-tarifas'));
+                tabInfoGeneralBtn.addEventListener('click', () => showTab('tab-content-info-general'));
+                tabRelacionadosBtn.addEventListener('click', () => showTab('tab-content-relacionados'));
+
+                showTab(hasTariffs ? 'tab-content-fechas-tarifas' : 'tab-content-info-general');
+
+                // --- FIN DE LA CORRECCIÓN ---
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todos los Paquetes Destacados - Terraquio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Muli:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: 'Muli', sans-serif;
+            background-color: #FFFFFF;
+            padding-top: 72px;
+        }
+        @media (min-width: 768px) {
+            body {
+                padding-top: 88px;
+            }
+        }
+        .bg-brand-dark-blue { background-color: #033E4C; }
+        .text-brand-dark-blue { color: #033E4C; }
+        .bg-brand-light-teal { background-color: #A4D4CC; }
+        .text-brand-light-teal { color: #A4D4CC; }
+        .card-paquete {
+            background-color: #374151;
+        }
+        .section-divider {
+            @apply w-24 h-1 bg-brand-light-teal mx-auto mt-3 mb-6;
+        }
+    </style>
+</head>
+<body class="bg-white">
+
+    <header class="bg-white shadow-md fixed top-0 w-full z-50">
+        <div class="container mx-auto px-6">
+            <div class="flex items-center justify-between py-3">
+                <div class="flex-shrink-0">
+                    <a href="index.html"> <img src="recursos/Logo Terraquio_Mesa de trabajo 1.png" alt="Logo Terraquio" class="h-16 md:h-20"> </a>
+                </div>
+                <nav class="hidden lg:flex items-center justify-center flex-grow">
+                    <div class="flex items-center space-x-6">
+                        <a href="index.html" class="text-brand-dark-blue hover:text-brand-light-teal font-bold text-sm uppercase">INICIO</a>
+                        <a href="index.html#destacados" class="text-brand-dark-blue hover:text-brand-light-teal font-bold text-sm uppercase">DESTACADOS</a>
+                        <a href="index.html#grupales" class="text-brand-dark-blue hover:text-brand-light-teal font-bold text-sm uppercase">GRUPALES</a>
+                        <a href="#" class="text-brand-dark-blue hover:text-brand-light-teal font-bold text-sm uppercase">DESTINOS</a>
+                        <a href="index.html#quinceaneras" class="text-brand-dark-blue hover:text-brand-light-teal font-bold text-sm uppercase">QUINCEAÑERAS</a>
+                        <a href="index.html#nosotros" class="text-brand-dark-blue hover:text-brand-light-teal font-bold text-sm uppercase">NOSOTROS</a>
+                        <a href="index.html#contacto" class="text-brand-dark-blue hover:text-brand-light-teal font-bold text-sm uppercase">CONTACTO</a>
+                    </div>
+                </nav>
+                <div id="header-actions" class="hidden lg:flex items-center space-x-4 header-actions flex-shrink-0">
+                    <a href="https://wa.me/5493416790064" target="_blank" class="text-brand-dark-blue hover:text-green-500">
+                        <i class="fab fa-whatsapp text-2xl"></i>
+                    </a>
+                    <span id="auth-links"></span>
+                </div>
+                <div class="lg:hidden">
+                    <button id="mobile-menu-button" class="text-gray-600 focus:outline-none">
+                        <i class="fa fa-bars text-3xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden lg:hidden px-6 pb-4 border-t bg-white">
+            <a href="index.html" class="block py-2 text-sm text-gray-700 hover:bg-brand-light-teal hover:text-brand-dark-blue rounded">INICIO</a>
+            <a href="index.html#destacados" class="block py-2 text-sm text-gray-700 hover:bg-brand-light-teal hover:text-brand-dark-blue rounded">DESTACADOS</a>
+            <a href="index.html#grupales" class="block py-2 text-sm text-gray-700 hover:bg-brand-light-teal hover:text-brand-dark-blue rounded">GRUPALES</a>
+            <a href="#" class="block py-2 text-sm text-gray-700 hover:bg-brand-light-teal hover:text-brand-dark-blue rounded">DESTINOS</a>
+            <a href="index.html#quinceaneras" class="block py-2 text-sm text-gray-700 hover:bg-brand-light-teal hover:text-brand-dark-blue rounded">QUINCEAÑERAS</a>
+            <a href="index.html#nosotros" class="block py-2 text-sm text-gray-700 hover:bg-brand-light-teal hover:text-brand-dark-blue rounded">NOSOTROS</a>
+            <a href="index.html#contacto" class="block py-2 text-sm text-gray-700 hover:bg-brand-light-teal hover:text-brand-dark-blue rounded">CONTACTO</a>
+            <div class="mt-4 border-t pt-4 flex items-center space-x-4">
+                 <a href="https://wa.me/5493416790064" target="_blank" class="text-brand-dark-blue hover:text-green-500"><i class="fab fa-whatsapp text-2xl"></i></a>
+                 <span id="auth-links-mobile"></span>
+            </div>
+        </div>
+    </header>
+
+    <main class="py-16">
+        <div class="container mx-auto px-6">
+            <h1 class="text-3xl md:text-4xl font-bold text-center text-brand-dark-blue uppercase">Todos Nuestros Destacados</h1>
+            <div class="section-divider"></div>
+            <div id="all-destacados-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-8">
+                <!-- Packages will be loaded here -->
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-brand-dark-blue text-white mt-16">
+       <div class="container mx-auto px-6 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
+                <div class="mb-6 md:mb-0">
+                    <h3 class="text-2xl font-bold">terraquio</h3>
+                    <p class="text-sm text-gray-400 mt-1">Empresa de Viajes y Turismo Leg. 12345</p>
+                    <p class="mt-4 text-gray-300"><i class="fas fa-map-marker-alt mr-2"></i>H. Irigoyen 1877, San Lorenzo, Santa Fe, Argentina</p>
+                    <p class="mt-2 text-gray-300"><i class="fas fa-phone mr-2"></i>+54 341 679-0064</p>
+                </div>
+                <div class="mb-6 md:mb-0">
+                    <h4 class="font-bold text-lg">Accesos Rápidos</h4>
+                    <ul class="mt-4 space-y-2">
+                        <li><a href="index.html#destacados" class="text-gray-300 hover:text-white">Destacados</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white">Destinos</a></li>
+                        <li><a href="index.html#grupales" class="text-gray-300 hover:text-white">Salidas Grupales</a></li>
+                        <li><a href="index.html#contacto" class="text-gray-300 hover:text-white">Contacto</a></li>
+                    </ul>
+                </div>
+                <div class="mb-6 md:mb-0">
+                    <h4 class="font-bold text-lg">Otros Enlaces</h4>
+                    <ul class="mt-4 space-y-2">
+                        <li><a href="#" class="text-gray-300 hover:text-white">Ministerio de Turismo</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white">Declaración de Manifiestos</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white">Acceso Agente</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-lg">Seguinos</h4>
+                    <div class="flex space-x-4 mt-4 justify-center md:justify-start">
+                        <a href="#" class="text-gray-300 hover:text-white text-2xl"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-gray-300 hover:text-white text-2xl"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-gray-300 hover:text-white text-2xl"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-gray-300 hover:text-white text-2xl"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-6 text-center text-sm text-gray-400">
+                <p>© 2024 Terraquio Viajes. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const SUPABASE_URL = 'https://rwndahfhxxasuwycfjug.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3bmRhaGZoeHhhc3V3eWNmanVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwMzA3MjUsImV4cCI6MjA2ODYwNjcyNX0.gZCP_LDl_WDqnhIIDHdqa-kWsDkYpxJ6RQxZcPtC0ZQ';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const allDestacadosContainer = document.getElementById('all-destacados-container');
+
+        function crearTarjetaDestacado(destino) {
+            const imageUrl = destino.imagen_url || 'recursos/placeholder.png';
+            const detailPageUrl = `detalle-paquete.html?id=${destino.id}&type=destacados`;
+            const iconosHtml = (destino.iconos || [])
+                .map(icon => `<i class="fas fa-${icon} text-brand-light-teal mr-2"></i>`)
+                .join('');
+
+            return `
+                <div class="card-paquete rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 flex flex-col">
+                    <a href="${detailPageUrl}" class="block">
+                        <img class="w-full h-48 object-cover" src="${imageUrl}" alt="Imagen de ${destino.nombre}">
+                    </a>
+                    <div class="p-4 flex flex-col flex-grow">
+                        <h3 class="text-xl font-bold text-white">${destino.nombre}</h3>
+                        <p class="text-xs text-gray-400 uppercase mt-1 mb-2">${destino.descripcion_corta || ''}</p>
+                        <div class="flex items-center text-sm my-2">
+                           ${iconosHtml}
+                        </div>
+                        <div class="mt-auto pt-2 flex justify-between items-center">
+                            <span class="text-2xl font-black text-brand-light-teal">${destino.precio}</span>
+                            <a href="${detailPageUrl}" class="bg-brand-dark-blue text-white border border-brand-light-teal font-bold py-1 px-3 rounded-full hover:bg-brand-light-teal hover:text-brand-dark-blue transition text-xs uppercase">
+                                Ver Más
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function cargarTodosDestacados() {
+            if (!allDestacadosContainer) return;
+            allDestacadosContainer.innerHTML = '<p class="text-gray-600 text-center col-span-full">Cargando paquetes...</p>';
+
+            const { data, error } = await supabase
+                .from('destacados')
+                .select('*')
+                .order('orden', { ascending: true });
+
+            if (error) {
+                console.error('Error al cargar todos los paquetes destacados:', error);
+                allDestacadosContainer.innerHTML = '<p class="text-red-500 text-center col-span-full">No se pudieron cargar los paquetes.</p>';
+                return;
+            }
+
+            if (data && data.length > 0) {
+                allDestacadosContainer.innerHTML = data.map(crearTarjetaDestacado).join('');
+            } else {
+                allDestacadosContainer.innerHTML = '<p class="text-gray-600 text-center col-span-full">No hay paquetes destacados disponibles.</p>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const authLinksContainer = document.getElementById('auth-links');
+            const authLinksMobileContainer = document.getElementById('auth-links-mobile');
+
+            supabase.auth.onAuthStateChange((event, session) => {
+                const userLoggedIn = !!session;
+                const authHtml = userLoggedIn
+                    ? `<a href="mi-cuenta.html" class="bg-brand-dark-blue text-white font-bold py-2 px-4 rounded-full hover:bg-opacity-90 transition text-xs uppercase">MI CUENTA</a>`
+                    : `<a href="login.html" class="bg-brand-dark-blue text-white font-bold py-2 px-4 rounded-full hover:bg-opacity-90 transition text-xs uppercase">INICIAR SESIÓN</a>`;
+                
+                if (authLinksContainer) authLinksContainer.innerHTML = authHtml;
+                if (authLinksMobileContainer) authLinksMobileContainer.innerHTML = authHtml.replace('py-2 px-4', 'py-2 px-4 w-full text-center block');
+            });
+
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            }
+
+            cargarTodosDestacados();
+        });
+    </script>
+
+</body>
+</html>

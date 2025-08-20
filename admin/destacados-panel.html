@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-gray-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Destacados - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .modal-backdrop { transition: opacity 0.3s ease; }
+        .drop-zone.drag-over { border-color: #3b82f6; background-color: #eff6ff; }
+        .tariff-item { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 1rem; align-items: end; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 0.375rem; margin-bottom: 0.75rem; background-color: #f8fafc; }
+        .tariff-item .delete-tariff-btn { background-color: #ef4444; color: white; padding: 0.5rem 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; text-align: center; }
+        .tariff-item .delete-tariff-btn:hover { background-color: #dc2626; }
+        .gallery-image-item { cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s ease; }
+        .gallery-image-item:hover { border-color: #3b82f6; }
+    </style>
+</head>
+<body class="h-full">
+    <div class="min-h-full">
+        <header class="bg-white shadow-sm">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-gray-900 py-6">Gestión de Paquetes Destacados</h1>
+                    <a href="dashboard.html" class="text-sm text-indigo-600 hover:text-indigo-900">&larr; Volver al panel principal</a>
+                </div>
+                <button id="logout-button" class="rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500">Cerrar Sesión</button>
+            </div>
+        </header>
+
+        <main class="py-10">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
+                <div>
+                    <div class="sm:flex sm:items-center">
+                        <div class="sm:flex-auto">
+                            <h2 class="text-base font-semibold leading-6 text-gray-900">Paquetes Destacados</h2>
+                            <p class="mt-2 text-sm text-gray-700">Gestiona los paquetes que aparecen en la sección "Destacados" de la página de inicio.</p>
+                        </div>
+                        <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+                            <button type="button" id="add-package-button" class="block rounded-md bg-[#033E4C] px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-opacity-90">Crear Paquete Destacado</button>
+                        </div>
+                    </div>
+                    <div class="mt-8 flow-root">
+                        <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                            <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                                <table class="min-w-full divide-y divide-gray-300">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">Orden</th>
+                                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Nombre</th>
+                                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Precio</th>
+                                            <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-0"><span class="sr-only">Acciones</span></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="packages-table-body" class="divide-y divide-gray-200"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="package-modal" class="relative z-10 hidden" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 modal-backdrop"></div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-xl">
+                    <form id="package-form">
+                        <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                            <h3 class="text-lg font-semibold leading-6 text-gray-900" id="package-modal-title">Crear Paquete</h3>
+                            <div class="mt-4 grid grid-cols-1 gap-y-6 max-h-[70vh] overflow-y-auto p-2">
+                                <input type="hidden" id="package-id" name="id">
+                                <div><label for="nombre" class="block text-sm font-medium text-gray-700">Nombre</label><input type="text" name="nombre" id="nombre" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border"></div>
+                                <div><label for="subtitulo" class="block text-sm font-medium text-gray-700">Subtítulo</label><input type="text" name="subtitulo" id="subtitulo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border" placeholder="Ej: SALIDA GRUPAL ACOMPAÑADA"></div>                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Imagen</label>
+                                    <div id="drop-zone" class="drop-zone mt-1 flex justify-center rounded-lg border-2 border-dashed border-gray-300 px-6 py-10 cursor-pointer hover:border-indigo-500">
+                                        <div class="text-center">
+                                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48"><path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                                            <p class="mt-1 text-sm text-gray-600">Arrastra y suelta o <span class="font-semibold text-indigo-600">haz clic</span></p>
+                                            <input id="file-input" type="file" class="sr-only file-input" accept="image/*">
+                                        </div>
+                                    </div>
+                                    <p id="upload-status" class="upload-status mt-2 text-sm text-gray-500"></p>
+                                    <img id="image-preview" src="" class="image-preview mt-4 rounded-lg max-h-40 hidden">
+                                    <button type="button" class="select-from-gallery-btn mt-2 block w-full rounded-md bg-gray-200 px-3 py-2 text-center text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-300">Seleccionar de la galería</button>
+                                </div>
+                                <div><label for="imagen_url" class="block text-sm font-medium text-gray-700">URL de la Imagen</label><input type="url" name="imagen_url" id="imagen_url" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border"></div>
+                                <div><label for="precio" class="block text-sm font-medium text-gray-700">Precio</label><input type="text" name="precio" id="precio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border"></div>
+                                <div><label for="descripcion" class="block text-sm font-medium text-gray-700">Descripción</label><textarea name="descripcion" id="descripcion" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border"></textarea></div>
+                                <div><label for="iconos" class="block text-sm font-medium text-gray-700">Iconos (separados por coma, ej: plane,hotel)</label><input type="text" name="iconos" id="iconos" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border"></div>
+                                <div><label for="orden" class="block text-sm font-medium text-gray-700">Orden (se calcula automáticamente si es nuevo)</label><input type="number" name="orden" id="orden" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border"></div>
+                                <div>
+                                    <label for="transporte" class="block text-sm font-medium text-gray-700">Tipo de Transporte</label>
+                                    <select name="transporte" id="transporte" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border">
+                                        <option value="">(Sin descripción)</option>
+                                        <option value="Aéreo">Aéreo</option>
+                                        <option value="Terrestre">Terrestre</option>
+                                        <option value="Marítimo">Marítimo</option>
+                                        <option value="Crucero">Crucero</option>
+                                        <option value="Bus">Bus</option>
+                                    </select>
+                                </div>
+                                <div><label for="noches" class="block text-sm font-medium text-gray-700">Cantidad de Noches</label><input type="text" name="noches" id="noches" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border" placeholder="Ej: 7 Noches"></div>
+                                <div>
+                                    <label for="regimen" class="block text-sm font-medium text-gray-700">Régimen</label>
+                                    <select name="regimen" id="regimen" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border">
+                                        <option value="">(Sin descripción)</option>
+                                        <option value="Desayuno">Desayuno</option>
+                                        <option value="Media Pensión">Media Pensión</option>
+                                        <option value="Pensión Completa">Pensión Completa</option>
+                                        <option value="All Inclusive">All Inclusive</option>
+                                        <option value="Sin Pensión">Sin Pensión</option>
+                                    </select>
+                                </div>
+                                <div>
+    <label class="block text-sm font-medium text-gray-700">Servicios Incluidos</label>
+    <div id="servicios-container" class="mt-1 space-y-2">
+        </div>
+    <button type="button" id="add-servicio-button" class="mt-2 inline-flex items-center rounded-md bg-blue-600 px-2 py-1 text-xs font-semibold text-white shadow-sm hover:bg-blue-500">
+        <svg class="-ml-0.5 mr-1 h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" /></svg>
+        Agregar Servicio
+    </button>
+</div>
+                                <div><label for="pdf_url" class="block text-sm font-medium text-gray-700">URL del Itinerario PDF</label><input type="url" name="pdf_url" id="pdf_url" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border" placeholder="https://ejemplo.com/itinerario.pdf"></div>
+                                <div><label for="fechas" class="block text-sm font-medium text-gray-700">Fecha de Inicio (o Fechas)</label><input type="date" name="fechas" id="fechas" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border"></div>
+                                <div><label for="region" class="block text-sm font-medium text-gray-700">Región</label><input type="text" name="region" id="region" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border" placeholder="Ej: Sur Argentino, Caribe"></div>
+
+                                <div class="col-span-full border-t pt-6 mt-6">
+                                    <h4 class="text-base font-semibold leading-6 text-gray-900 mb-4">Fechas y Tarifas</h4>
+                                    <div id="tariffs-container"></div>
+                                    <button type="button" id="add-tariff-button" class="mt-4 inline-flex items-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500">
+                                        <svg class="-ml-0.5 mr-1.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 2a.75.75 0 01.75.75v6.5a.75.75 0 01-1.5 0v-6.5A.75.75 0 0110 2zM5.25 10a.75.75 0 01.75-.75h8a.75.75 0 010 1.5h-8a.75.75 0 01-.75-.75z" clip-rule="evenodd" /></svg>
+                                        Agregar Tarifa
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                            <button type="submit" class="inline-flex w-full justify-center rounded-md bg-[#033E4C] px-3 py-2 text-sm font-semibold text-white shadow-sm sm:ml-3 sm:w-auto">Guardar Paquete</button>
+                            <button type="button" id="cancel-package-button" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm sm:mt-0 sm:w-auto ring-1 ring-inset ring-gray-300">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="gallery-modal" class="relative z-20 hidden" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 modal-backdrop"></div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-3xl">
+                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <h3 class="text-lg font-semibold leading-6 text-gray-900 mb-4">Seleccionar Imagen de Galería</h3>
+                        <div id="gallery-image-list" class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-h-96 overflow-y-auto p-2 border rounded-md"></div>
+                        <p id="gallery-loading-message" class="text-center text-gray-600 mt-4 hidden">Cargando imágenes...</p>
+                        <p id="gallery-empty-message" class="text-center text-gray-600 mt-4 hidden">No hay imágenes en la galería.</p>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                        <button type="button" id="close-gallery-modal-btn" class="inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // --- 1. CONFIG & DOM ELEMENTS ---
+    const SUPABASE_URL = 'https://rwndahfhxxasuwycfjug.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3bmRhaGZoeHhhc3V3eWNmanVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwMzA3MjUsImV4cCI6MjA2ODYwNjcyNX0.gZCP_LDl_WDqnhIIDHdqa-kWsDkYpxJ6RQxZcPtC0ZQ';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const PACKAGE_TABLE = 'destacados';
+    const TARIFF_TABLE = 'paquete_tarifas';
+
+    const logoutButton = document.getElementById('logout-button');
+    const packagesTableBody = document.getElementById('packages-table-body');
+    const addPackageButton = document.getElementById('add-package-button');
+    const packageModal = document.getElementById('package-modal');
+    const packageForm = document.getElementById('package-form');
+    const cancelPackageButton = document.getElementById('cancel-package-button');
+    const galleryModal = document.getElementById('gallery-modal');
+    const galleryImageList = document.getElementById('gallery-image-list');
+    const galleryLoadingMessage = document.getElementById('gallery-loading-message');
+    const galleryEmptyMessage = document.getElementById('gallery-empty-message');
+    const closeGalleryModalBtn = document.getElementById('close-gallery-modal-btn');
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const selectFromGalleryBtn = document.querySelector('.select-from-gallery-btn');
+    const addTariffButton = document.getElementById('add-tariff-button');
+    let packagesData = [];
+
+    // --- 2. AUTH & SHARED FUNCTIONS ---
+    const checkAdmin = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) { window.location.href = './index.html'; return false; }
+        const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+        if (profile?.role !== 'admin') {
+            alert("Acceso denegado."); await supabase.auth.signOut(); window.location.href = './index.html'; return false;
+        }
+        return true;
+    };
+
+    const togglePackageModal = () => packageModal.classList.toggle('hidden');
+    const toggleGalleryModal = () => galleryModal.classList.toggle('hidden');
+    
+    const clearUploadState = () => {
+        document.getElementById('upload-status').textContent = '';
+        const previewEl = document.getElementById('image-preview');
+        previewEl.src = '';
+        previewEl.classList.add('hidden');
+        fileInput.value = '';
+    };
+
+    const uploadImage = async (file) => {
+        const statusEl = document.getElementById('upload-status');
+        const previewEl = document.getElementById('image-preview');
+        const urlInputEl = document.getElementById('imagen_url');
+        statusEl.textContent = 'Subiendo...';
+        const filePath = `destacados/${Date.now()}-${file.name}`;
+        const { error } = await supabase.storage.from('imagenes-web').upload(filePath, file);
+        if (error) { statusEl.textContent = 'Error: ' + error.message; return; }
+        const { data } = supabase.storage.from('imagenes-web').getPublicUrl(filePath);
+        statusEl.textContent = '¡Subida con éxito!';
+        urlInputEl.value = data.publicUrl;
+        previewEl.src = data.publicUrl;
+        previewEl.classList.remove('hidden');
+    };
+
+    const loadImagesIntoGallery = async () => {
+        galleryImageList.innerHTML = '';
+        galleryLoadingMessage.classList.remove('hidden');
+        galleryEmptyMessage.classList.add('hidden');
+        const { data, error } = await supabase.storage.from('imagenes-web').list('destinos', { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
+        galleryLoadingMessage.classList.add('hidden');
+        if (error || !data || data.length === 0) { galleryEmptyMessage.classList.remove('hidden'); return; }
+        
+        data.forEach(file => {
+            if (file.name === '.emptyFolderPlaceholder') return;
+            const publicUrl = supabase.storage.from('imagenes-web').getPublicUrl(`destinos/${file.name}`).data.publicUrl;
+            const imgDiv = document.createElement('div');
+            imgDiv.className = 'gallery-image-item relative w-full pt-[100%]';
+            imgDiv.innerHTML = `<img src="${publicUrl}" alt="${file.name}" class="absolute top-0 left-0 w-full h-full object-cover" data-url="${publicUrl}">`;
+            imgDiv.querySelector('img').addEventListener('click', (e) => selectImageFromGallery(e.target.dataset.url));
+            galleryImageList.appendChild(imgDiv);
+        });
+    };
+
+    const selectImageFromGallery = (imageUrl) => {
+        document.getElementById('imagen_url').value = imageUrl;
+        document.getElementById('image-preview').src = imageUrl;
+        document.getElementById('image-preview').classList.remove('hidden');
+        document.getElementById('upload-status').textContent = 'Imagen seleccionada.';
+        toggleGalleryModal();
+    };
+
+    const addTariffRow = (container, tariff = {}) => {
+        const tariffDiv = document.createElement('div');
+        tariffDiv.classList.add('tariff-item');
+        const formattedDate = tariff.fecha_salida ? new Date(tariff.fecha_salida).toISOString().split('T')[0] : '';
+        tariffDiv.innerHTML = `
+            <div><label class="block text-xs font-medium text-gray-700">Fecha Salida</label><input type="date" name="tariff-fecha_salida" value="${formattedDate}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-2 py-1 border text-sm"></div>
+            <div><label class="block text-xs font-medium text-gray-700">Noches</label><input type="text" name="tariff-noches" value="${tariff.noches || ''}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-2 py-1 border text-sm"></div>
+            <div><label class="block text-xs font-medium text-gray-700">Hotel</label><input type="text" name="tariff-hotel_nombre" value="${tariff.hotel_nombre || ''}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-2 py-1 border text-sm"></div>
+            <div><label class="block text-xs font-medium text-gray-700">Hotel Link</label><input type="url" name="tariff-hotel_url" value="${tariff.hotel_url || ''}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-2 py-1 border text-sm" placeholder="https://"></div>
+            <div><label class="block text-xs font-medium text-gray-700">Régimen</label><select name="tariff-regimen" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-2 py-1 border text-sm"><option value="">Seleccione</option><option value="Desayuno" ${tariff.regimen === 'Desayuno' ? 'selected' : ''}>Desayuno</option><option value="Media Pensión" ${tariff.regimen === 'Media Pensión' ? 'selected' : ''}>Media Pensión</option><option value="Pensión Completa" ${tariff.regimen === 'Pensión Completa' ? 'selected' : ''}>Pensión Completa</option><option value="All Inclusive" ${tariff.regimen === 'All Inclusive' ? 'selected' : ''}>All Inclusive</option><option value="Sin Pensión" ${tariff.regimen === 'Sin Pensión' ? 'selected' : ''}>Sin Pensión</option></select></div>
+            <div><label class="block text-xs font-medium text-gray-700">Tarifa</label><input type="text" name="tariff-tarifa" value="${tariff.tarifa || ''}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-2 py-1 border text-sm"></div>
+            <div><label class="block text-xs font-medium text-gray-700">Moneda</label><input type="text" name="tariff-moneda" value="${tariff.moneda || 'USD'}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-2 py-1 border text-sm"></div>
+            <div><label class="block text-xs font-medium text-gray-700">Base</label><select name="tariff-base" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-2 py-1 border text-sm"><option value="">Seleccione</option><option value="Single" ${tariff.base === 'Single' ? 'selected' : ''}>Single</option><option value="Doble" ${tariff.base === 'Doble' ? 'selected' : ''}>Doble</option><option value="Triple" ${tariff.base === 'Triple' ? 'selected' : ''}>Triple</option></select></div>
+            <div class="col-span-full"><label class="block text-xs font-medium text-gray-700">Notas Adicionales</label><textarea name="tariff-descripcion_adicional" rows="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-2 py-1 border text-sm">${tariff.descripcion_adicional || ''}</textarea></div>
+            <button type="button" class="delete-tariff-btn">Eliminar</button>`;
+        container.appendChild(tariffDiv);
+        tariffDiv.querySelector('.delete-tariff-btn').addEventListener('click', () => tariffDiv.remove());
+    };
+
+    const addServicioRow = (container, value = '') => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center gap-2';
+        div.innerHTML = `
+            <input type="text" value="${value}" class="servicio-input mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border text-sm" placeholder="Descripción del servicio">
+            <button type="button" class="remove-servicio-btn flex-shrink-0 rounded-md bg-red-600 px-2 py-1 text-xs font-semibold text-white hover:bg-red-500">Quitar</button>
+        `;
+        container.appendChild(div);
+        div.querySelector('.remove-servicio-btn').addEventListener('click', () => div.remove());
+    };
+
+    // --- 3. CRUD LOGIC ---
+    const fetchPackages = async () => {
+        const { data, error } = await supabase.from(PACKAGE_TABLE).select('*').order('orden', { ascending: true });
+        if (error) { console.error(`Error al cargar paquetes:`, error); return; }
+        packagesData = data;
+        renderPackagesTable();
+    };
+
+    const renderPackagesTable = () => {
+        if (!packagesData || packagesData.length === 0) {
+            packagesTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-gray-500 py-4">No hay paquetes destacados creados.</td></tr>`;
+            return;
+        }
+        packagesTableBody.innerHTML = packagesData.map(pkg => `
+            <tr>
+                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">${pkg.orden}</td>
+                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">${pkg.nombre || '(Sin nombre)'}</td>
+                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">${pkg.precio || '-'}</td>
+                <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
+                    <button data-id="${pkg.id}" class="text-indigo-600 hover:text-indigo-900 edit-package-btn">Editar</button>
+                    <button data-id="${pkg.id}" class="text-red-600 hover:text-red-900 ml-4 delete-package-btn">Eliminar</button>
+                </td>
+            </tr>`).join('');
+    };
+
+    const editPackage = async (id) => {
+        const pkg = packagesData.find(p => p.id == id);
+        if (!pkg) return;
+
+        packageForm.reset();
+        clearUploadState();
+        document.getElementById('package-modal-title').textContent = 'Editar Paquete Destacado';
+        
+        for (const key in pkg) {
+            const element = packageForm.elements[key];
+            if (element && key !== 'servicios') { // Ignoramos 'servicios' aquí
+                 if (key === 'iconos' && Array.isArray(pkg[key])) { element.value = pkg[key].join(', '); } 
+                 else if (element.type === 'date' && pkg[key]) { element.value = pkg[key].split('T')[0]; } 
+                 else { element.value = pkg[key] || ''; }
+            }
+        }
+
+        const serviciosContainer = packageModal.querySelector('#servicios-container');
+        serviciosContainer.innerHTML = ''; // Limpiar contenedor
+        if (Array.isArray(pkg.servicios) && pkg.servicios.length > 0) {
+            pkg.servicios.forEach(servicio => addServicioRow(serviciosContainer, servicio));
+        } else {
+            addServicioRow(serviciosContainer); // Añadir uno vacío si no hay
+        }
+
+        if (pkg.imagen_url) {
+            document.getElementById('image-preview').src = pkg.imagen_url;
+            document.getElementById('image-preview').classList.remove('hidden');
+        }
+
+        if (packageForm.elements.subtitulo) {
+    packageForm.elements.subtitulo.value = pkg.subtitulo || '';
+}
+
+        const tariffsContainer = document.getElementById('tariffs-container');
+        tariffsContainer.innerHTML = '';
+        const { data: tariffs } = await supabase.from(TARIFF_TABLE).select('*').eq('paquete_id', pkg.id);
+        if (tariffs && tariffs.length > 0) {
+            tariffs.forEach(t => addTariffRow(tariffsContainer, t));
+        } else {
+            addTariffRow(tariffsContainer);
+        }
+        
+        togglePackageModal();
+    };
+
+    const deletePackage = async (id) => {
+        if (confirm('¿Estás seguro de que quieres eliminar este paquete y todas sus tarifas asociadas?')) {
+            await supabase.from(TARIFF_TABLE).delete().eq('paquete_id', id);
+            await supabase.from(PACKAGE_TABLE).delete().eq('id', id);
+            fetchPackages();
+        }
+    };
+
+    // --- 4. EVENT LISTENERS ---
+    logoutButton.addEventListener('click', async () => { await supabase.auth.signOut(); window.location.href = './index.html'; });
+
+    addPackageButton.addEventListener('click', () => {
+        packageForm.reset();
+        clearUploadState();
+        document.getElementById('package-modal-title').textContent = 'Crear Paquete Destacado';
+        packageForm.elements.id.value = '';
+        document.getElementById('tariffs-container').innerHTML = '';
+        addTariffRow(document.getElementById('tariffs-container'));
+        togglePackageModal();
+    });
+
+    cancelPackageButton.addEventListener('click', togglePackageModal);
+    closeGalleryModalBtn.addEventListener('click', toggleGalleryModal);
+    addTariffButton.addEventListener('click', () => addTariffRow(document.getElementById('tariffs-container')));
+    document.getElementById('add-servicio-button').addEventListener('click', () => {
+        addServicioRow(document.getElementById('servicios-container'));
+    });
+
+    packagesTableBody.addEventListener('click', (e) => {
+        const id = e.target.dataset.id;
+        if (!id) return;
+        if (e.target.classList.contains('edit-package-btn')) editPackage(id);
+        if (e.target.classList.contains('delete-package-btn')) deletePackage(id);
+    });
+
+    packageForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(packageForm);
+        const packageId = formData.get('id');
+        
+        const packageData = {
+            nombre: formData.get('nombre') || null,
+            subtitulo: formData.get('subtitulo') || null,
+            imagen_url: formData.get('imagen_url') || null,
+            precio: formData.get('precio') || null,
+            descripcion: formData.get('descripcion') || null,
+            iconos: (formData.get('iconos') || '').split(',').map(item => item.trim()).filter(Boolean),
+            orden: formData.get('orden') || 0,
+            transporte: formData.get('transporte') || null,
+            noches: formData.get('noches') || null,
+            regimen: formData.get('regimen') || null,
+            servicios: Array.from(packageModal.querySelectorAll('.servicio-input')).map(input => input.value.trim()).filter(Boolean),
+            pdf_url: formData.get('pdf_url') || null,
+            fechas: formData.get('fechas') || null,
+            region: formData.get('region') || null,
+        };
+
+        // MODIFICACIÓN: Calcular el orden si es un paquete nuevo
+        if (!packageId) {
+            const maxOrder = packagesData.length > 0 
+                ? Math.max(...packagesData.map(p => p.orden || 0)) 
+                : -1;
+            packageData.orden = maxOrder + 1;
+        }
+
+        let currentPackageId = packageId;
+        if (packageId) {
+            const { error } = await supabase.from(PACKAGE_TABLE).update(packageData).eq('id', packageId);
+            if (error) { alert('Error al actualizar paquete: ' + error.message); return; }
+        } else {
+            const { data, error } = await supabase.from(PACKAGE_TABLE).insert(packageData).select().single();
+            if (error) { alert('Error al crear paquete: ' + error.message); return; }
+            currentPackageId = data.id;
+        }
+
+        const tariffRows = document.querySelectorAll('.tariff-item');
+        const tariffsToSave = [];
+        tariffRows.forEach(row => {
+            const tariff = {}; let hasData = false;
+            row.querySelectorAll('input, select, textarea').forEach(input => {
+                const fieldName = input.name.replace('tariff-', '');
+                const value = input.value.trim();
+                if (value) {
+                    tariff[fieldName] = value;
+                    hasData = true;
+                }
+            });
+            if (hasData) tariffsToSave.push(tariff);
+        });
+
+        await supabase.from(TARIFF_TABLE).delete().eq('paquete_id', currentPackageId);
+        if (tariffsToSave.length > 0) {
+            const tariffsWithId = tariffsToSave.map(t => ({ ...t, paquete_id: currentPackageId }));
+            await supabase.from(TARIFF_TABLE).insert(tariffsWithId);
+        }
+        
+        alert('Paquete guardado con éxito.');
+        togglePackageModal();
+        fetchPackages();
+    });
+
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', (e) => e.currentTarget.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', (e) => { e.preventDefault(); e.currentTarget.classList.remove('drag-over'); if (e.dataTransfer.files.length > 0) uploadImage(e.dataTransfer.files[0]); });
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => { if (e.target.files.length > 0) uploadImage(e.target.files[0]); });
+    selectFromGalleryBtn.addEventListener('click', async () => { await loadImagesIntoGallery(); toggleGalleryModal(); });
+
+    // --- 5. INICIALIZACIÓN ---
+    document.addEventListener('DOMContentLoaded', async () => {
+        if (!await checkAdmin()) return;
+        await fetchPackages();
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-gray-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Quinceañeras - Terraquio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .modal-backdrop { transition: opacity 0.3s ease; }
+        .drop-zone.drag-over { border-color: #3b82f6; background-color: #eff6ff; }
+    </style>
+</head>
+<body class="h-full">
+    <div class="min-h-full">
+        <header class="bg-white shadow-sm">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+                <div class="flex items-center gap-x-6">
+                    <h1 class="text-xl font-bold tracking-tight text-gray-900 py-6">Panel de Quinceañeras</h1>
+                    <a href="dashboard.html" class="text-sm font-semibold text-indigo-600 hover:text-indigo-500">&larr; Volver al panel principal</a>
+                </div>
+                <button id="logout-button" class="rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500">Cerrar Sesión</button>
+            </div>
+        </header>
+
+        <main class="py-10">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
+                <div>
+                    <div class="sm:flex sm:items-center">
+                        <div class="sm:flex-auto">
+                            <h2 class="text-base font-semibold leading-6 text-gray-900">Programas de Quinceañeras</h2>
+                            <p class="mt-2 text-sm text-gray-700">Gestiona las tarjetas de programas que aparecen en la página de Quinceañeras.</p>
+                        </div>
+                        <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+                            <button type="button" id="add-programa-button" class="block rounded-md bg-[#033E4C] px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-opacity-90">Crear Programa</button>
+                        </div>
+                    </div>
+                    <div class="mt-8 flow-root">
+                        <div class="inline-block min-w-full py-2 align-middle">
+                            <table class="min-w-full divide-y divide-gray-300">
+                                <thead>
+                                    <tr>
+                                        <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">Orden</th>
+                                        <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Imagen</th>
+                                        <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Nombre</th>
+                                        <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Descripción</th>
+                                        <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Activo</th>
+                                        <th class="relative py-3.5 pl-3 pr-4"><span class="sr-only">Acciones</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="programas-table-body" class="divide-y divide-gray-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="sm:flex sm:items-center">
+                        <div class="sm:flex-auto">
+                            <h2 class="text-base font-semibold leading-6 text-gray-900">Imágenes del Slider (Página de Inicio)</h2>
+                            <p class="mt-2 text-sm text-gray-700">Gestiona las imágenes que rotan en la sección "Quinceañeras" de la página principal.</p>
+                        </div>
+                        <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+                            <button type="button" id="add-slider-image-button" class="block rounded-md bg-[#A4D4CC] px-3 py-2 text-center text-sm font-semibold text-[#033E4C] shadow-sm hover:bg-opacity-90">Añadir Imagen al Slider</button>
+                        </div>
+                    </div>
+                    <div class="mt-8 flow-root">
+                         <div class="inline-block min-w-full py-2 align-middle">
+                            <table class="min-w-full divide-y divide-gray-300">
+                                <thead>
+                                    <tr>
+                                        <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">Orden</th>
+                                        <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Imagen</th>
+                                        <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Activo</th>
+                                        <th class="relative py-3.5 pl-3 pr-4"><span class="sr-only">Acciones</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="slider-images-table-body" class="divide-y divide-gray-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="programa-modal" class="relative z-10 hidden" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 modal-backdrop"></div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                    <form id="programa-form">
+                        <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                            <h3 class="text-lg font-semibold leading-6 text-gray-900" id="programa-modal-title">Crear Programa</h3>
+                            <div class="mt-4 grid grid-cols-1 gap-y-6">
+                                <input type="hidden" id="programa-id" name="id">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Imagen</label>
+                                    <div id="drop-zone" class="drop-zone mt-1 flex justify-center rounded-lg border-2 border-dashed border-gray-300 px-6 py-10 cursor-pointer">
+                                        <div class="text-center">
+                                            <p class="mt-1 text-sm text-gray-600">Arrastra una imagen o <span class="font-semibold text-indigo-600">haz clic</span></p>
+                                            <input id="file-input" type="file" class="sr-only" accept="image/*">
+                                        </div>
+                                    </div>
+                                    <p id="upload-status" class="mt-2 text-sm text-gray-500"></p>
+                                    <img id="image-preview" src="" class="mt-4 rounded-lg max-h-40 hidden">
+                                </div>
+                                <div>
+                                    <label for="imagen_url" class="block text-sm font-medium text-gray-700">URL de la Imagen</label>
+                                    <input type="url" name="imagen_url" id="imagen_url" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border">
+                                </div>
+                                <div>
+                                    <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre del Programa</label>
+                                    <input type="text" name="nombre" id="nombre" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border">
+                                </div>
+                                <div>
+                                    <label for="descripcion" class="block text-sm font-medium text-gray-700">Descripción</label>
+                                    <input type="text" name="descripcion" id="descripcion" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border">
+                                </div>
+                                <div>
+                                    <label for="orden" class="block text-sm font-medium text-gray-700">Orden</label>
+                                    <input type="number" name="orden" id="orden" value="0" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border">
+                                </div>
+                                <div class="flex items-center">
+                                    <input id="activo" name="activo" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600">
+                                    <label for="activo" class="ml-3 block text-sm font-medium text-gray-900">Activo (visible en la web)</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                            <button type="submit" class="inline-flex w-full justify-center rounded-md bg-[#033E4C] px-3 py-2 text-sm font-semibold text-white shadow-sm sm:ml-3 sm:w-auto">Guardar</button>
+                            <button type="button" id="cancel-programa-button" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm sm:mt-0 sm:w-auto ring-1 ring-inset ring-gray-300">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="slider-image-modal" class="relative z-10 hidden" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 modal-backdrop"></div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                    <form id="slider-image-form">
+                        <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                            <h3 class="text-lg font-semibold leading-6 text-gray-900" id="slider-image-modal-title">Añadir Imagen al Slider</h3>
+                            <div class="mt-4 grid grid-cols-1 gap-y-6">
+                                <input type="hidden" id="slider-image-id" name="id">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Imagen</label>
+                                    <div id="slider-drop-zone" class="drop-zone mt-1 flex justify-center rounded-lg border-2 border-dashed border-gray-300 px-6 py-10 cursor-pointer">
+                                        <div class="text-center">
+                                            <p class="mt-1 text-sm text-gray-600">Arrastra una imagen o <span class="font-semibold text-indigo-600">haz clic</span></p>
+                                            <input id="slider-file-input" type="file" class="sr-only" accept="image/*">
+                                        </div>
+                                    </div>
+                                    <p id="slider-upload-status" class="mt-2 text-sm text-gray-500"></p>
+                                    <img id="slider-image-preview" src="" class="mt-4 rounded-lg max-h-40 hidden">
+                                </div>
+                                <div>
+                                    <label for="slider_imagen_url" class="block text-sm font-medium text-gray-700">URL de la Imagen</label>
+                                    <input type="url" name="imagen_url" id="slider_imagen_url" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border">
+                                </div>
+                                <div>
+                                    <label for="slider_orden" class="block text-sm font-medium text-gray-700">Orden</label>
+                                    <input type="number" name="orden" id="slider_orden" value="0" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border">
+                                </div>
+                                <div class="flex items-center">
+                                    <input id="slider_activo" name="activo" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600">
+                                    <label for="slider_activo" class="ml-3 block text-sm font-medium text-gray-900">Activo (visible en la web)</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                            <button type="submit" class="inline-flex w-full justify-center rounded-md bg-[#033E4C] px-3 py-2 text-sm font-semibold text-white shadow-sm sm:ml-3 sm:w-auto">Guardar</button>
+                            <button type="button" id="cancel-slider-image-button" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm sm:mt-0 sm:w-auto ring-1 ring-inset ring-gray-300">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    // --- 1. CONFIG & DOM ELEMENTS ---
+    const SUPABASE_URL = 'https://rwndahfhxxasuwycfjug.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3bmRhaGZoeHhhc3V3eWNmanVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwMzA3MjUsImV4cCI6MjA2ODYwNjcyNX0.gZCP_LDl_WDqnhIIDHdqa-kWsDkYpxJ6RQxZcPtC0ZQ';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Programas
+    const programasTableBody = document.getElementById('programas-table-body');
+    const programaModal = document.getElementById('programa-modal');
+    const programaForm = document.getElementById('programa-form');
+    const uploadStatus = document.getElementById('upload-status');
+    const imagePreview = document.getElementById('image-preview');
+    const fileInput = document.getElementById('file-input');
+    let programasData = [];
+    const programasTableName = 'quinceaneras_programas';
+
+    // Slider Images
+    const sliderImagesTableBody = document.getElementById('slider-images-table-body');
+    const sliderImageModal = document.getElementById('slider-image-modal');
+    const sliderImageForm = document.getElementById('slider-image-form');
+    const sliderUploadStatus = document.getElementById('slider-upload-status');
+    const sliderImagePreview = document.getElementById('slider-image-preview');
+    const sliderFileInput = document.getElementById('slider-file-input');
+    let sliderImagesData = [];
+    const sliderTableName = 'quinceaneras_slider_images';
+
+    // --- 2. AUTH & SHARED FUNCTIONS ---
+    const checkAdmin = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) { window.location.href = './login.html'; return false; }
+        const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+        if (profile?.role !== 'admin') {
+            alert("Acceso denegado."); window.location.href = './index.html'; return false;
+        }
+        return true;
+    };
+
+    // --- 3. CRUD PROGRAMAS ---
+    const fetchProgramas = async () => {
+        const { data, error } = await supabase.from(programasTableName).select('*').order('orden', { ascending: true });
+        if (error) { console.error(`Error al cargar programas:`, error); return; }
+        programasData = data;
+        renderProgramasTable();
+    };
+
+    const renderProgramasTable = () => {
+        programasTableBody.innerHTML = programasData.map(prog => `
+            <tr>
+                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">${prog.orden}</td>
+                <td class="px-3 py-4"><img src="${prog.imagen_url}" alt="${prog.nombre}" class="h-10 w-20 object-cover rounded"></td>
+                <td class="px-3 py-4 text-sm text-gray-500">${prog.nombre}</td>
+                <td class="px-3 py-4 text-sm text-gray-500 max-w-xs truncate">${prog.descripcion}</td>
+                <td class="px-3 py-4 text-sm text-gray-500">${prog.activo ? 'Sí' : 'No'}</td>
+                <td class="relative py-4 pl-3 pr-4 text-right text-sm font-medium">
+                    <button data-id="${prog.id}" class="text-indigo-600 hover:text-indigo-900 edit-programa-btn">Editar</button>
+                    <button data-id="${prog.id}" class="text-red-600 hover:text-red-900 ml-4 delete-programa-btn">Eliminar</button>
+                </td>
+            </tr>
+        `).join('');
+    };
+
+    const handleProgramaFormSubmit = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(programaForm);
+        const programaData = Object.fromEntries(formData.entries());
+        programaData.activo = formData.get('activo') === 'on';
+        const programaId = programaData.id;
+        delete programaData.id;
+        
+        if (programaId) {
+            await supabase.from(programasTableName).update(programaData).eq('id', programaId);
+        } else {
+            await supabase.from(programasTableName).insert([programaData]);
+        }
+        programaModal.classList.add('hidden');
+        fetchProgramas();
+    };
+
+    const handleProgramaImageUpload = async (file) => {
+        if (!file) return;
+        uploadStatus.textContent = 'Subiendo...';
+        const filePath = `quinceaneras/programas/${Date.now()}-${file.name}`;
+        const { error } = await supabase.storage.from('imagenes-web').upload(filePath, file);
+        if (error) { uploadStatus.textContent = 'Error: ' + error.message; return; }
+        
+        const { data } = supabase.storage.from('imagenes-web').getPublicUrl(filePath);
+        uploadStatus.textContent = '¡Imagen subida!';
+        document.getElementById('imagen_url').value = data.publicUrl;
+        imagePreview.src = data.publicUrl;
+        imagePreview.classList.remove('hidden');
+    };
+
+    // --- 4. CRUD SLIDER IMAGES ---
+    const fetchSliderImages = async () => {
+        const { data, error } = await supabase.from(sliderTableName).select('*').order('orden', { ascending: true });
+        if (error) { console.error('Error fetching slider images:', error); return; }
+        sliderImagesData = data;
+        renderSliderImagesTable();
+    };
+
+    const renderSliderImagesTable = () => {
+        sliderImagesTableBody.innerHTML = sliderImagesData.map(img => `
+            <tr>
+                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">${img.orden}</td>
+                <td class="px-3 py-4"><img src="${img.imagen_url}" alt="Slider Image" class="h-10 w-20 object-cover rounded"></td>
+                <td class="px-3 py-4 text-sm text-gray-500">${img.activo ? 'Sí' : 'No'}</td>
+                <td class="relative py-4 pl-3 pr-4 text-right text-sm font-medium">
+                    <button data-id="${img.id}" class="text-indigo-600 hover:text-indigo-900 edit-slider-btn">Editar</button>
+                    <button data-id="${img.id}" class="text-red-600 hover:text-red-900 ml-4 delete-slider-btn">Eliminar</button>
+                </td>
+            </tr>
+        `).join('');
+    };
+
+    const handleSliderFormSubmit = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(sliderImageForm);
+        const imageData = {
+            imagen_url: formData.get('imagen_url'),
+            orden: formData.get('orden'),
+            activo: formData.get('activo') === 'on',
+        };
+        const imageId = formData.get('id');
+
+        if (imageId) {
+            await supabase.from(sliderTableName).update(imageData).eq('id', imageId);
+        } else {
+            await supabase.from(sliderTableName).insert([imageData]);
+        }
+        sliderImageModal.classList.add('hidden');
+        fetchSliderImages();
+    };
+
+    const handleSliderImageUpload = async (file) => {
+        if (!file) return;
+        sliderUploadStatus.textContent = 'Subiendo...';
+        const filePath = `quinceaneras/slider/${Date.now()}-${file.name}`;
+        const { error } = await supabase.storage.from('imagenes-web').upload(filePath, file);
+        if (error) { sliderUploadStatus.textContent = 'Error: ' + error.message; return; }
+        
+        const { data } = supabase.storage.from('imagenes-web').getPublicUrl(filePath);
+        sliderUploadStatus.textContent = '¡Imagen subida!';
+        document.getElementById('slider_imagen_url').value = data.publicUrl;
+        sliderImagePreview.src = data.publicUrl;
+        sliderImagePreview.classList.remove('hidden');
+    };
+
+    // --- 5. INICIALIZACIÓN Y EVENT LISTENERS ---
+    document.addEventListener('DOMContentLoaded', async () => {
+        if (!await checkAdmin()) return;
+        fetchProgramas();
+        fetchSliderImages();
+
+        // Listeners para Programas
+        document.getElementById('add-programa-button').addEventListener('click', () => {
+            programaForm.reset();
+            imagePreview.classList.add('hidden');
+            uploadStatus.textContent = '';
+            document.getElementById('programa-id').value = '';
+            document.getElementById('programa-modal-title').textContent = 'Crear Programa';
+            document.getElementById('activo').checked = true;
+            programaModal.classList.remove('hidden');
+        });
+        document.getElementById('cancel-programa-button').addEventListener('click', () => programaModal.classList.add('hidden'));
+        document.getElementById('drop-zone').addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => handleProgramaImageUpload(e.target.files[0]));
+        programaForm.addEventListener('submit', handleProgramaFormSubmit);
+        programasTableBody.addEventListener('click', (e) => {
+            const id = e.target.dataset.id; if (!id) return;
+            const programa = programasData.find(p => p.id == id); if (!programa) return;
+
+            if (e.target.classList.contains('edit-programa-btn')) {
+                // ***** BLOQUE CORREGIDO *****
+                // Se asignan los valores a cada campo explícitamente
+                programaForm.elements.id.value = programa.id;
+                programaForm.elements.nombre.value = programa.nombre;
+                programaForm.elements.descripcion.value = programa.descripcion;
+                programaForm.elements.imagen_url.value = programa.imagen_url;
+                programaForm.elements.orden.value = programa.orden;
+                programaForm.elements.activo.checked = programa.activo; // Se usa .checked para la casilla
+                
+                imagePreview.src = programa.imagen_url;
+                imagePreview.classList.remove('hidden');
+                document.getElementById('programa-modal-title').textContent = 'Editar Programa';
+                programaModal.classList.remove('hidden');
+            }
+            if (e.target.classList.contains('delete-programa-btn')) {
+                if (confirm(`¿Seguro que quieres eliminar "${programa.nombre}"?`)) {
+                    supabase.from(programasTableName).delete().eq('id', id).then(() => fetchProgramas());
+                }
+            }
+        });
+        
+        // Listeners para Slider Images
+        document.getElementById('add-slider-image-button').addEventListener('click', () => {
+            sliderImageForm.reset();
+            sliderImagePreview.classList.add('hidden');
+            sliderUploadStatus.textContent = '';
+            document.getElementById('slider-image-id').value = '';
+            document.getElementById('slider-image-modal-title').textContent = 'Añadir Imagen al Slider';
+            document.getElementById('slider_activo').checked = true;
+            sliderImageModal.classList.remove('hidden');
+        });
+        document.getElementById('cancel-slider-image-button').addEventListener('click', () => sliderImageModal.classList.add('hidden'));
+        document.getElementById('slider-drop-zone').addEventListener('click', () => sliderFileInput.click());
+        sliderFileInput.addEventListener('change', (e) => handleSliderImageUpload(e.target.files[0]));
+        sliderImageForm.addEventListener('submit', handleSliderFormSubmit);
+        
+        sliderImagesTableBody.addEventListener('click', (e) => {
+            const id = e.target.dataset.id; if (!id) return;
+            const image = sliderImagesData.find(p => p.id == id); if (!image) return;
+
+            if (e.target.classList.contains('edit-slider-btn')) {
+                document.getElementById('slider-image-id').value = image.id;
+                document.getElementById('slider_imagen_url').value = image.imagen_url;
+                document.getElementById('slider_orden').value = image.orden;
+                document.getElementById('slider_activo').checked = image.activo;
+                sliderImagePreview.src = image.imagen_url;
+                sliderImagePreview.classList.remove('hidden');
+                document.getElementById('slider-image-modal-title').textContent = 'Editar Imagen del Slider';
+                sliderImageModal.classList.remove('hidden');
+            }
+            if (e.target.classList.contains('delete-slider-btn')) {
+                if (confirm(`¿Seguro que quieres eliminar esta imagen?`)) {
+                    supabase.from(sliderTableName).delete().eq('id', id).then(() => fetchSliderImages());
+                }
+            }
+        });
+        
+        document.getElementById('logout-button').addEventListener('click', async () => {
+            await supabase.auth.signOut();
+            window.location.href = './index.html';
+        });
+    });
+</script>
+</body>
+</html>
+</body>
+</html>

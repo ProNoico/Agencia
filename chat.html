@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Widget - Terraquio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Muli:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Muli', sans-serif;
+            background-color: #f0f2f5;
+        }
+        /* Colores de la marca Terraquio */
+        .bg-brand-dark-blue { background-color: #033E4C; }
+        .text-brand-dark-blue { color: #033E4C; }
+        .border-brand-dark-blue { border-color: #033E4C; }
+        .bg-brand-light-teal { background-color: #A4D4CC; }
+        .text-brand-light-teal { color: #A4D4CC; }
+
+        .chat-widget {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .chat-toggle {
+            width: 60px;
+            height: 60px;
+            background-color: #033E4C; /* Color principal de Terraquio */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(3, 62, 76, 0.4);
+            transition: all 0.3s ease;
+            border: none;
+            color: white;
+        }
+
+        .chat-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(3, 62, 76, 0.5);
+        }
+
+        .chat-window {
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .chat-window.active {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .chat-header {
+            background-color: #033E4C; /* Color principal de Terraquio */
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-messages {
+            height: 350px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        
+        .message { margin-bottom: 16px; animation: slideIn 0.3s ease; }
+        .message.bot { text-align: left; }
+        .message.user { text-align: right; }
+
+        .message-bubble {
+            display: inline-block;
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .message.bot .message-bubble {
+            background: #e8e0d8; /* bg-brand-neutral */
+            color: #033E4C;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.user .message-bubble {
+            background: #033E4C; /* Color principal de Terraquio */
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .button-group { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+
+        .option-button {
+            background: white;
+            border: 2px solid #DACCBF; /* bg-brand-beige */
+            color: #033E4C;
+            padding: 12px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            text-align: left;
+        }
+
+        .option-button:hover {
+            border-color: #033E4C;
+            background: #f0f9ff;
+        }
+
+        .option-button.primary {
+            background: #033E4C;
+            color: white;
+            border-color: #033E4C;
+        }
+        .option-button.primary:hover { background: #022a33; }
+        
+        .option-button.secondary {
+            background: #A4D4CC; /* bg-brand-light-teal */
+            color: #033E4C;
+            border-color: #A4D4CC;
+        }
+        .option-button.secondary:hover { background: #8dbfb6; }
+
+        .typing-indicator { display: flex; align-items: center; gap: 8px; color: #6b7280; font-size: 14px; margin-bottom: 16px; }
+        .typing-dots { display: flex; gap: 4px; }
+        .typing-dot { width: 6px; height: 6px; background: #6b7280; border-radius: 50%; animation: typing 1.4s infinite; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        .powered-by { text-align: center; padding: 12px; font-size: 12px; color: #6b7280; background: #f8fafc; border-top: 1px solid #e5e7eb; }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes typing { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-10px); } }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto p-8">
+        <h1 class="text-3xl font-bold text-brand-dark-blue">Página de Prueba del Chatbot Terraquio</h1>
+        <p class="mt-2 text-gray-600">Este es un archivo independiente para probar el widget del chat. Haz clic en el ícono de abajo a la derecha.</p>
+    </div>
+
+    <!-- Chat Widget -->
+    <div class="chat-widget">
+        <div class="chat-window" id="chatWindow">
+            <div class="chat-header">
+                <div>
+                    <div class="font-bold text-lg">Asistente Terraquio 🤖</div>
+                    <div class="text-sm opacity-90">Tu compañero de viajes</div>
+                </div>
+                <button onclick="toggleChat()" class="text-white hover:text-gray-200 transition-colors text-2xl">&times;</button>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages"></div>
+            
+            <div class="powered-by">
+                <a href="https://terraquio.com.ar" target="_blank" class="hover:underline">Terraquio Viajes</a>
+            </div>
+        </div>
+        
+        <button class="chat-toggle" onclick="toggleChat()" id="chatToggle">
+            <i class="fas fa-plane-departure text-2xl"></i>
+        </button>
+    </div>
+
+    <script>
+        const chatState = { 
+            isOpen: false,
+            userData: {}
+        };
+        const chatWindow = document.getElementById('chatWindow');
+        const chatMessages = document.getElementById('chatMessages');
+        const chatToggle = document.getElementById('chatToggle');
+
+        function toggleChat() {
+            chatState.isOpen = !chatState.isOpen;
+            chatWindow.classList.toggle('active');
+            chatToggle.innerHTML = chatState.isOpen ? '<i class="fas fa-times text-2xl"></i>' : '<i class="fas fa-plane-departure text-2xl"></i>';
+            if (chatState.isOpen && chatMessages.children.length === 0) {
+                startConversation();
+            }
+        }
+
+        function addMessage(text, isBot = true, buttons = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isBot ? 'bot' : 'user'}`;
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'message-bubble';
+            bubbleDiv.innerHTML = text;
+            messageDiv.appendChild(bubbleDiv);
+            
+            if (buttons) {
+                const buttonGroup = document.createElement('div');
+                buttonGroup.className = 'button-group';
+                buttons.forEach(button => {
+                    const buttonElement = document.createElement('button');
+                    buttonElement.className = `option-button ${button.class || ''}`;
+                    buttonElement.innerHTML = button.text;
+                    buttonElement.addEventListener('click', button.action);
+                    buttonGroup.appendChild(buttonElement);
+                });
+                messageDiv.appendChild(buttonGroup);
+            }
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showTyping() {
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typing-indicator';
+            typingDiv.className = 'typing-indicator';
+            typingDiv.innerHTML = `<span>Asistente está escribiendo</span><div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function hideTyping() {
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) indicator.remove();
+        }
+
+        function startConversation() {
+            showTyping();
+            setTimeout(() => {
+                hideTyping();
+                addMessage('¡Hola! 👋 Soy tu asistente virtual de Terraquio.');
+                setTimeout(() => {
+                    showTyping();
+                    setTimeout(() => {
+                        hideTyping();
+                        addMessage('Estoy aquí para ayudarte a encontrar tu próximo viaje soñado. ¿Qué tenés en mente?', true, [
+                            { text: '✈️ Salidas Grupales', action: () => handleTravelType('Grupales') },
+                            { text: '🎉 Viajes de Quince', action: () => handleTravelType('Quinceañeras') },
+                            { text: '🏖️ Playas y Caribe', action: () => handleTravelType('Playas') },
+                            { text: '🌍 Europa y Exóticos', action: () => handleTravelType('Exóticos') },
+                            { text: '💬 Hablar con un asesor', action: talkToHuman, class: 'secondary' }
+                        ]);
+                    }, 1500);
+                }, 500);
+            }, 1500);
+        }
+
+        function handleTravelType(type) {
+            chatState.userData.travelType = type;
+            addMessage(`Me interesan los viajes de: ${type}`, false);
+            showTyping();
+            setTimeout(() => {
+                hideTyping();
+                addMessage('¡Genial! Para darte la mejor info, necesito un par de detalles. ¿Para cuántas personas sería el viaje?', true, [
+                    { text: 'Una persona', action: () => handlePassengerCount('1') },
+                    { text: 'Una pareja (2)', action: () => handlePassengerCount('2') },
+                    { text: 'Familia (3-4)', action: () => handlePassengerCount('3-4') },
+                    { text: 'Grupo (5+)', action: () => handlePassengerCount('5 o más') }
+                ]);
+            }, 1500);
+        }
+
+        function handlePassengerCount(count) {
+            chatState.userData.passengerCount = count;
+            addMessage(`${count} persona(s)`, false);
+            showTyping();
+            setTimeout(() => {
+                hideTyping();
+                addMessage('Perfecto. ¿Tienen alguna fecha o mes en mente para viajar?', true, [
+                    { text: 'Próximos 3 meses', action: () => handleTravelDate('Próximos 3 meses') },
+                    { text: 'Próximos 6 meses', action: () => handleTravelDate('Próximos 6 meses') },
+                    { text: 'Sin fecha definida', action: () => handleTravelDate('Sin fecha definida') },
+                    { text: 'Fechas específicas', action: () => handleTravelDate('Fechas específicas (lo consulto con un asesor)') }
+                ]);
+            }, 1500);
+        }
+
+        function handleTravelDate(date) {
+            chatState.userData.travelDate = date;
+            addMessage(date, false);
+            showTyping();
+            setTimeout(() => {
+                hideTyping();
+                addMessage('¡Ya casi estamos! ¿Cuál es el presupuesto aproximado que manejan por persona?', true, [
+                    { text: 'Hasta USD 1.000', action: () => handleBudget('Hasta 1000 USD') },
+                    { text: 'Entre USD 1.000 y 2.000', action: () => handleBudget('Entre 1000 y 2000 USD') },
+                    { text: 'Más de USD 2.000', action: () => handleBudget('Más de 2000 USD') },
+                    { text: 'Prefiero no decirlo', action: () => handleBudget('Prefiere no decirlo') }
+                ]);
+            }, 1500);
+        }
+
+        function handleBudget(budget) {
+            chatState.userData.budget = budget;
+            addMessage(budget, false);
+            showTyping();
+            setTimeout(() => {
+                hideTyping();
+                addMessage('¡Excelente! Tengo toda la información que necesito. Con estos datos, uno de nuestros asesores expertos puede prepararte una propuesta a medida.', true, [
+                    { text: 'Sí, ¡contactame!', action: talkToHuman, class: 'primary' },
+                    { text: 'No, gracias por ahora', action: () => addMessage('Entendido. Si cambiás de opinión, ¡aquí estoy para ayudarte!') }
+                ]);
+            }, 1500);
+        }
+
+        function talkToHuman() {
+            addMessage('Quiero hablar con un asesor.', false);
+            showTyping();
+            setTimeout(() => {
+                hideTyping();
+                const userData = chatState.userData;
+                const summary = `Tipo de viaje: ${userData.travelType || 'N/A'}\nPasajeros: ${userData.passengerCount || 'N/A'}\nFecha: ${userData.travelDate || 'N/A'}\nPresupuesto: ${userData.budget || 'N/A'}`;
+                const whatsappText = encodeURIComponent(`Hola! Quisiera recibir asesoramiento para un viaje con las siguientes características:\n\n${summary}`);
+                
+                addMessage('¡Perfecto! Un asesor de Terraquio se pondrá en contacto contigo a la brevedad. Para agilizar, podés enviarnos un WhatsApp con el resumen de tu consulta.', true, [
+                    { text: '<i class="fab fa-whatsapp"></i> Enviar WhatsApp con mis datos', action: () => openWhatsApp(whatsappText), class: 'primary' },
+                    { text: 'Volver a empezar', action: resetChat }
+                ]);
+            }, 1500);
+        }
+        
+        function openWhatsApp(text) {
+            window.open(`https://wa.me/5493476606001?text=${text}`, '_blank');
+        }
+
+        function resetChat() {
+            chatState.userData = {};
+            chatMessages.innerHTML = '';
+            startConversation();
+        }
+    </script>
+</body>
+</html>

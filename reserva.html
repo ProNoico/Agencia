@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmar Reserva - Terraquio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Muli:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: 'Muli', sans-serif; background-color: #033E4C; }
+    </style>
+</head>
+<body class="bg-brand-dark-blue">
+    <div class="container mx-auto p-4 md:p-8 flex flex-col items-center justify-center min-h-screen">
+
+        <div class="text-center mb-8">
+            <a href="index.html"><img src="recursos/LOGO.png" alt="Logo de Terraquio" class="h-40 w-auto mx-auto"></a>
+            <p class="text-lg" style="color: #A4D4CC;">Estás a un paso de tu próxima aventura</p>
+        </div>
+
+        <div id="main-content" class="bg-white p-8 rounded-xl shadow-lg w-full max-w-4xl">
+            <h2 class="text-2xl font-bold" style="color: #033E4C;">Tu Reserva para:</h2>
+            <h3 id="paquete-titulo" class="text-xl font-semibold" style="color: #033E4C;">Cargando...</h3>
+            <div id="paquete-detalles" class="text-md text-gray-700 mt-2 border-t pt-2">
+                </div>
+
+            <div id="booking-form-section" class="mt-8">
+                <form id="booking-form">
+                    <h3 class="text-lg font-bold border-b pb-2 mb-4">Datos del Pasajero Principal</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div>
+                            <label for="nombres" class="text-sm font-medium text-gray-700">Nombres</label>
+                            <input type="text" id="nombres" class="mt-1 p-2 border rounded w-full" required>
+                        </div>
+                        <div>
+                            <label for="apellidos" class="text-sm font-medium text-gray-700">Apellido/s</label>
+                            <input type="text" id="apellidos" class="mt-1 p-2 border rounded w-full" required>
+                        </div>
+                        <div>
+                            <label for="num_cel" class="text-sm font-medium text-gray-700">Núm. Cel</label>
+                            <input type="tel" id="num_cel" class="mt-1 p-2 border rounded w-full" required>
+                        </div>
+                        <div>
+                            <label for="email" class="text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" id="email" class="mt-1 p-2 border rounded w-full" required>
+                        </div>
+                        <div>
+                            <label for="dni" class="text-sm font-medium text-gray-700">DNI</label>
+                            <input type="text" id="dni" class="mt-1 p-2 border rounded w-full" required>
+                        </div>
+                        <div>
+                            <label for="fecha_nacimiento" class="text-sm font-medium text-gray-700">Fecha de Nacimiento</label>
+                            <input type="date" id="fecha_nacimiento" class="mt-1 p-2 border rounded w-full" required>
+                        </div>
+                        <div class="lg:col-span-3 md:col-span-2">
+                            <label for="notas" class="text-sm font-medium text-gray-700">Notas u observaciones adicionales</label>
+                            <textarea id="notas" rows="2" class="mt-1 p-2 border rounded w-full"></textarea>
+                        </div>
+                    </div>
+
+                    <div id="viajantes-adicionales" class="mt-6">
+                        <h3 class="text-lg font-bold border-b pb-2 mb-4">Acompañantes</h3>
+                    </div>
+                    <button type="button" id="add-traveler-btn" class="mt-4 text-sm py-2 px-4 rounded-full" style="background-color: #A4D4CC; color: #033E4C; font-weight: 700;">Añadir Pasajero</button>
+
+                    <div class="mt-8 border-t pt-4">
+                        <button type="submit" class="w-full bg-green-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-600 transition text-lg uppercase">Confirmar Solicitud de Reserva</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://rwndahfhxxasuwycfjug.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3bmRhaGZoeHhhc3V3eWNmanVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwMzA3MjUsImV4cCI6MjA2ODYwNjcyNX0.gZCP_LDl_WDqnhIIDHdqa-kWsDkYpxJ6RQxZcPtC0ZQ';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const paqueteTituloEl = document.getElementById('paquete-titulo');
+        const paqueteDetallesEl = document.getElementById('paquete-detalles');
+        const addTravelerBtn = document.getElementById('add-traveler-btn');
+        const additionalTravelersContainer = document.getElementById('viajantes-adicionales');
+        const bookingForm = document.getElementById('booking-form');
+        let paqueteNombreGlobal = ''; // Cambiamos el nombre de la variable global
+
+        // --- INICIO DE LA CORRECCIÓN ---
+
+        // Función mejorada para buscar el nombre del paquete en todas las tablas posibles
+        async function findPackageName(id) {
+            const tablesToSearch = ['destacados', 'grupales_paquetes', 'eventos_paquetes', 'regiones_paquetes'];
+            for (const table of tablesToSearch) {
+                const { data } = await supabase.from(table).select('nombre').eq('id', id).single();
+                if (data) {
+                    return data.nombre;
+                }
+            }
+            return null; // Devuelve null si no se encuentra en ninguna tabla
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Método 1: Leer datos desde localStorage (enviados desde detalle-paquete.html)
+            const pendingReservationJSON = localStorage.getItem('pendingReservation');
+            
+            let paqueteId, fechaSalida, noches, paqueteNombre;
+
+            if (pendingReservationJSON) {
+                const pendingReservation = JSON.parse(pendingReservationJSON);
+                paqueteId = pendingReservation.paqueteId;
+                fechaSalida = pendingReservation.fechaSalida;
+                noches = pendingReservation.noches;
+                paqueteNombre = pendingReservation.nombre;
+                
+                // Limpiamos el item para que no se use en futuras visitas a esta página
+                localStorage.removeItem('pendingReservation');
+
+            } else {
+                // Método 2: Fallback por si los datos se envían por URL (menos probable)
+                const urlParams = new URLSearchParams(window.location.search);
+                paqueteId = urlParams.get('id') || urlParams.get('paqueteId');
+                fechaSalida = urlParams.get('salida');
+                noches = urlParams.get('noches');
+            }
+
+            // Llenar el título del paquete
+            if (paqueteNombre) {
+                paqueteTituloEl.textContent = paqueteNombre;
+                paqueteNombreGlobal = paqueteNombre;
+            } else if (paqueteId) {
+                // Si no teníamos el nombre, lo buscamos con la función mejorada
+                const nombreEncontrado = await findPackageName(paqueteId);
+                if (nombreEncontrado) {
+                    paqueteTituloEl.textContent = nombreEncontrado;
+                    paqueteNombreGlobal = nombreEncontrado;
+                } else {
+                    paqueteTituloEl.textContent = 'Paquete no encontrado';
+                }
+            } else {
+                paqueteTituloEl.textContent = 'Paquete no especificado';
+            }
+
+            // Llenar los detalles de la fecha
+            if (paqueteDetallesEl) {
+                let detallesHtml = '';
+                if (fechaSalida) {
+                    const salidaDate = new Date(fechaSalida + 'T00:00:00'); // Asegura la fecha correcta
+                    detallesHtml += `<p><span class="font-semibold">Salida:</span> ${salidaDate.toLocaleDateString('es-AR')}</p>`;
+                }
+                if (noches) {
+                    detallesHtml += `<p><span class="font-semibold">Noches:</span> ${noches}</p>`;
+                }
+                paqueteDetallesEl.innerHTML = detallesHtml || '<p>Detalles de fecha no especificados.</p>';
+            }
+        });
+        
+        // --- FIN DE LA CORRECCIÓN ---
+
+
+        let travelerCount = 0;
+        addTravelerBtn.addEventListener('click', () => {
+            travelerCount++;
+            const travelerDiv = document.createElement('div');
+            travelerDiv.classList.add('p-4', 'border', 'rounded-lg', 'mt-4', 'traveler-row', 'bg-gray-50');
+            travelerDiv.innerHTML = `
+                <div class="flex justify-between items-center mb-3">
+                    <p class="font-semibold text-gray-700">Datos Acompañante ${travelerCount}</p>
+                    <button type="button" onclick="removeTraveler(this)" class="bg-red-500 text-white rounded-full h-8 w-8 flex-shrink-0 flex items-center justify-center font-bold hover:bg-red-600">X</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-xs">Nombres</label>
+                        <input type="text" class="mt-1 p-2 border rounded w-full traveler-nombres" required>
+                    </div>
+                    <div>
+                        <label class="text-xs">Apellido/s</label>
+                        <input type="text" class="mt-1 p-2 border rounded w-full traveler-apellidos" required>
+                    </div>
+                    <div>
+                        <label class="text-xs">DNI</label>
+                        <input type="text" class="mt-1 p-2 border rounded w-full traveler-dni" required>
+                    </div>
+                    <div class="lg:col-span-1 md:col-span-2">
+                        <label class="text-xs">Fecha de Nacimiento</label>
+                        <input type="date" class="mt-1 p-2 border rounded w-full traveler-fecha-nacimiento" required>
+                    </div>
+                    <div class="lg:col-span-2">
+                        <label class="text-xs">Notas u observaciones adicionales</label>
+                        <textarea rows="1" class="mt-1 p-2 border rounded w-full traveler-notas"></textarea>
+                    </div>
+                </div>
+            `;
+            additionalTravelersContainer.appendChild(travelerDiv);
+        });
+
+        function removeTraveler(button) {
+            const travelerRow = button.closest('.traveler-row');
+            if (travelerRow) {
+                travelerRow.remove();
+            }
+        }
+
+        bookingForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const acompanantes = [];
+            const travelerElements = additionalTravelersContainer.querySelectorAll('.traveler-row');
+            travelerElements.forEach(el => {
+                acompanantes.push({
+                    nombres: el.querySelector('.traveler-nombres').value,
+                    apellidos: el.querySelector('.traveler-apellidos').value,
+                    dni: el.querySelector('.traveler-dni').value,
+                    fecha_nacimiento: el.querySelector('.traveler-fecha-nacimiento').value,
+                    notas: el.querySelector('.traveler-notas').value,
+                });
+            });
+
+            const reserva = {
+                paquete_nombre: paqueteNombreGlobal, // Usamos la variable global
+                pasajero_principal: {
+                    nombres: document.getElementById('nombres').value,
+                    apellidos: document.getElementById('apellidos').value,
+                    num_cel: document.getElementById('num_cel').value,
+                    email: document.getElementById('email').value,
+                    dni: document.getElementById('dni').value,
+                    fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
+                    notas: document.getElementById('notas').value,
+                },
+                acompanantes: acompanantes,
+            };
+
+            console.log("Datos de la reserva a enviar:", reserva);
+            alert("Solicitud de reserva enviada. Revisa la consola para ver los datos.");
+            
+            // Aquí iría la lógica para insertar en Supabase
+            // const { data, error } = await supabase.from('reservas').insert([reserva]);
+        });
+    </script>
+</body>
+</html>

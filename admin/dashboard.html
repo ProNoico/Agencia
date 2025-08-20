@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-gray-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Terraquio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="h-full">
+    <div class="min-h-full">
+        <header class="bg-white shadow-sm">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 d-flex justify-between flex items-center">
+                <h1 class="text-xl font-bold tracking-tight text-gray-900 py-6">Panel de Administración Principal</h1>
+                <button id="logout-button" class="rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500">Cerrar Sesión</button>
+            </div>
+        </header>
+
+        <main class="py-10">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div>
+                    <h2 class="text-base font-semibold leading-7 text-gray-900">Gestión de Contenido del Sitio Web</h2>
+                    <p class="mt-1 text-sm leading-6 text-gray-600">Selecciona el panel que deseas administrar.</p>
+
+                    <div class="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        <a href="destacados-panel.html" class="block rounded-lg bg-white p-6 shadow-sm hover:shadow-lg transition-shadow border border-gray-200">
+                            <h3 class="text-base font-semibold text-[#033E4C]">
+                                <i class="fas fa-star mr-2"></i>Paquetes Destacados
+                            </h3>
+                            <p class="mt-2 text-sm text-gray-600">Gestiona los paquetes que aparecen en la sección principal de "Destacados".</p>
+                        </a>
+                        <a href="grupales-panel.html" class="block rounded-lg bg-white p-6 shadow-sm hover:shadow-lg transition-shadow border border-gray-200">
+                            <h3 class="text-base font-semibold text-[#033E4C]">
+                                <i class="fas fa-users mr-2"></i>Salidas Grupales
+                            </h3>
+                            <p class="mt-2 text-sm text-gray-600">Administra los paquetes y banners de la sección "Salidas Grupales".</p>
+                        </a>
+                         <a href="eventos-imperdibles-panel.html" class="block rounded-lg bg-white p-6 shadow-sm hover:shadow-lg transition-shadow border border-gray-200">
+                            <h3 class="text-base font-semibold text-[#033E4C]">
+                                <i class="fas fa-ticket-alt mr-2"></i>Eventos Imperdibles
+                            </h3>
+                            <p class="mt-2 text-sm text-gray-600">Gestiona los eventos especiales como recitales y espectáculos deportivos.</p>
+                        </a>
+                        <a href="regiones-panel.html" class="block rounded-lg bg-white p-6 shadow-sm hover:shadow-lg transition-shadow border border-ray-200">
+                            <h3 class="text-base font-semibold text-[#033E4C]">
+                                <i class="fas fa-globe-americas mr-2"></i>Regiones y Destinos
+                            </h3>
+                            <p class="mt-2 text-sm text-gray-600">Administra el carrusel "¡Buscá tu destino!" y sus paquetes asociados.</p>
+                        </a>
+                        <a href="quinceaneras-panel.html" class="block rounded-lg bg-white p-6 shadow-sm hover:shadow-lg transition-shadow border border-gray-200">
+                            <h3 class="text-base font-semibold text-[#033E4C]">
+                                <i class="fas fa-birthday-cake mr-2"></i>Quinceañeras
+                            </h3>
+                            <p class="mt-2 text-sm text-gray-600">Administra los programas y fotos de la página de Quinceañeras.</p>
+                        </a>
+                        <a href="reservas-panel.html" class="block rounded-lg bg-white p-6 shadow-sm hover:shadow-lg transition-shadow border border-gray-200">
+                            <h3 class="text-base font-semibold text-[#033E4C]">
+                                <i class="fas fa-calendar-check mr-2"></i>Gestión de Reservas
+                            </h3>
+                            <p class="mt-2 text-sm text-gray-600">Crea, modifica y elimina las reservas de los clientes.</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+    <script>
+        const SUPABASE_URL = 'https://rwndahfhxxasuwycfjug.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3bmRhaGZoeHhhc3V3eWNmanVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwMzA3MjUsImV4cCI6MjA2ODYwNjcyNX0.gZCP_LDl_WDqnhIIDHdqa-kWsDkYpxJ6RQxZcPtC0ZQ';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // --- AUTH & COMMON ELEMENTS ---
+        const logoutButton = document.getElementById('logout-button');
+        logoutButton.addEventListener('click', async () => {
+            await supabase.auth.signOut();
+            window.location.href = './index.html';
+        });
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = './index.html';
+                return;
+            }
+
+            const { data: profile, error } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+            if (error || profile?.role !== 'admin') {
+                alert("Acceso denegado. Esta área es solo para administradores.");
+                await supabase.auth.signOut();
+                window.location.href = './index.html';
+                return;
+            }
+        });
+    </script>
+</body>
+</html>

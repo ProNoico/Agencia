@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso - Terraquio</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Muli:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            font-family: 'Muli', sans-serif;
+            background-color: #E8E0D8; /* Usando bg-brand-neutral */
+        }
+        .bg-brand-dark-blue { background-color: #033E4C; }
+        .text-brand-dark-blue { color: #033E4C; }
+        .border-brand-dark-blue { border-color: #033E4C; }
+        .bg-brand-light-teal { background-color: #A4D4CC; }
+        .text-brand-light-teal { color: #A4D4CC; }
+        .btn-teal {
+            background-color: #A4D4CC;
+            color: #033E4C;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+        .btn-teal:hover {
+            background-color: #033E4C;
+            color: #A4D4CC;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Header simplificado -->
+    <header class="bg-white shadow-md">
+        <div class="container mx-auto px-6 py-3 text-center">
+            <a href="index.html">
+                <img src="recursos/Logo Terraquio_Mesa de trabajo 1.png" alt="Logo Terraquio" class="h-16 md:h-20 inline-block">
+            </a>
+        </div>
+    </header>
+
+    <!-- Contenido principal -->
+    <main class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg">
+            
+            <!-- Vista de Login -->
+            <div id="login-view">
+                <h2 class="mt-6 text-center text-3xl font-bold text-brand-dark-blue uppercase">
+                    Accedé a tu cuenta
+                </h2>
+                <form id="login-form" class="mt-8 space-y-6" novalidate>
+                    <div class="rounded-md shadow-sm -space-y-px">
+                        <div>
+                            <label for="login-email" class="sr-only">Email</label>
+                            <input id="login-email" name="email" type="email" autocomplete="email" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-brand-light-teal focus:border-brand-light-teal focus:z-10 sm:text-sm" placeholder="Correo electrónico">
+                        </div>
+                        <div>
+                            <label for="login-password" class="sr-only">Contraseña</label>
+                            <input id="login-password" name="password" type="password" autocomplete="current-password" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-brand-light-teal focus:border-brand-light-teal focus:z-10 sm:text-sm" placeholder="Contraseña">
+                        </div>
+                    </div>
+                    <div id="login-message" class="text-center text-sm font-medium text-red-600"></div>
+                    <div>
+                        <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-full btn-teal focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-dark-blue uppercase">
+                            Iniciar Sesión
+                        </button>
+                    </div>
+                </form>
+                <div class="text-sm text-center mt-4">
+                    <p>¿No tenés cuenta? <a href="#" id="show-signup-link" class="font-medium text-brand-dark-blue hover:text-brand-light-teal">Registrate acá</a></p>
+                </div>
+            </div>
+
+            <!-- Vista de Registro (oculta por defecto) -->
+            <div id="signup-view" class="hidden">
+                <h2 class="mt-6 text-center text-3xl font-bold text-brand-dark-blue uppercase">
+                    Creá tu cuenta
+                </h2>
+                <form id="signup-form" class="mt-8 space-y-6" novalidate>
+                    <div class="rounded-md shadow-sm -space-y-px">
+                        <div>
+                            <label for="signup-email" class="sr-only">Email</label>
+                            <input id="signup-email" name="email" type="email" autocomplete="email" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-brand-light-teal focus:border-brand-light-teal focus:z-10 sm:text-sm" placeholder="Correo electrónico">
+                        </div>
+                        <div>
+                            <label for="signup-password" class="sr-only">Contraseña</label>
+                            <input id="signup-password" name="password" type="password" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-brand-light-teal focus:border-brand-light-teal focus:z-10 sm:text-sm" placeholder="Contraseña (mín. 6 caracteres)">
+                        </div>
+                         <div>
+                            <label for="signup-password-confirm" class="sr-only">Confirmar Contraseña</label>
+                            <input id="signup-password-confirm" name="password-confirm" type="password" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-brand-light-teal focus:border-brand-light-teal focus:z-10 sm:text-sm" placeholder="Confirmar contraseña">
+                        </div>
+                    </div>
+                    <div id="signup-message" class="text-center text-sm font-medium"></div>
+                    <div>
+                        <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-full btn-teal focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-dark-blue uppercase">
+                            Crear Cuenta
+                        </button>
+                    </div>
+                </form>
+                <div class="text-sm text-center mt-4">
+                    <p>¿Ya tenés cuenta? <a href="#" id="show-login-link" class="font-medium text-brand-dark-blue hover:text-brand-light-teal">Iniciá sesión</a></p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+    
+    <!-- Footer simplificado -->
+    <footer class="bg-brand-dark-blue text-white">
+        <div class="container mx-auto py-4 px-6 text-center text-sm text-gray-400">
+            <p>© 2024 Terraquio Viajes. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const SUPABASE_URL = 'https://rwndahfhxxasuwycfjug.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3bmRhaGZoeHhhc3V3eWNmanVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwMzA3MjUsImV4cCI6MjA2ODYwNjcyNX0.gZCP_LDl_WDqnhIIDHdqa-kWsDkYpxJ6RQxZcPtC0ZQ';
+            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+            // Vistas y formularios
+            const loginView = document.getElementById('login-view');
+            const signupView = document.getElementById('signup-view');
+            const loginForm = document.getElementById('login-form');
+            const signupForm = document.getElementById('signup-form');
+            
+            // Mensajes
+            const loginMessage = document.getElementById('login-message');
+            const signupMessage = document.getElementById('signup-message');
+
+            // Enlaces para cambiar de vista
+            const showSignupLink = document.getElementById('show-signup-link');
+            const showLoginLink = document.getElementById('show-login-link');
+
+            // --- Lógica para cambiar entre Login y Registro ---
+            showSignupLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                loginView.classList.add('hidden');
+                signupView.classList.remove('hidden');
+            });
+
+            showLoginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                signupView.classList.add('hidden');
+                loginView.classList.remove('hidden');
+            });
+
+            // --- Lógica de Inicio de Sesión ---
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                loginMessage.textContent = '';
+                const email = loginForm['login-email'].value;
+                const password = loginForm['login-password'].value;
+
+                const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+                if (error) {
+                    loginMessage.textContent = 'Error: Credenciales de acceso incorrectas.';
+                } else {
+                    loginMessage.textContent = '¡Inicio de sesión exitoso! Redirigiendo...';
+                    loginMessage.classList.remove('text-red-600');
+                    loginMessage.classList.add('text-green-600');
+
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const redirectTo = urlParams.get('redirectTo');
+                    
+                    setTimeout(() => {
+                        window.location.href = redirectTo || 'index.html';
+                    }, 1000);
+                }
+            });
+
+            // --- Lógica de Registro ---
+            signupForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                signupMessage.textContent = '';
+                const email = signupForm['signup-email'].value;
+                const password = signupForm['signup-password'].value;
+                const passwordConfirm = signupForm['signup-password-confirm'].value;
+
+                if (password !== passwordConfirm) {
+                    signupMessage.textContent = 'Las contraseñas no coinciden.';
+                    signupMessage.classList.add('text-red-600');
+                    return;
+                }
+
+                const { error } = await supabase.auth.signUp({ email, password });
+
+                if (error) {
+                    signupMessage.textContent = `Error: ${error.message}`;
+                    signupMessage.classList.add('text-red-600');
+                } else {
+                    signupMessage.textContent = '¡Registro exitoso! Revisa tu correo para confirmar tu cuenta.';
+                    signupMessage.classList.remove('text-red-600');
+                    signupMessage.classList.add('text-green-600');
+                    signupForm.reset();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

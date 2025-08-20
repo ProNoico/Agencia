@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terraquio - Mucho más que viajes</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="stylesheet" href="css/style.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Muli:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+   <style>
+    .swiper-destinos-container .swiper-button-next,
+    .swiper-destinos-container .swiper-button-prev,
+    .banner-grupales-slider .swiper-button-next,
+    .banner-grupales-slider .swiper-button-prev {
+        color: #033E4C; /* Color text-brand-dark-blue */
+    }
+    
+    /* Regla definitiva para quitar cualquier tipo de subrayado o borde */
+    .banner-grupales-slider .juntos-text {
+        text-decoration: none !important;
+        border-bottom: none !important;
+    }
+</style>
+
+</head>
+<body class="bg-white">
+
+    <header class="bg-white shadow-md fixed top-0 w-full z-50">
+        <div class="container mx-auto px-6">
+            <div class="flex items-center justify-between py-3">
+                <div class="flex-shrink-0">
+                    <a href="index.html"> <img src="recursos/Logo Terraquio_Mesa de trabajo 1.png" alt="Logo Terraquio" class="h-16 md:h-20"> </a>
+                </div>
+
+                <nav class="hidden lg:flex items-center justify-center flex-grow">
+                    <div class="flex items-center space-x-6">
+                        <a href="#" class="text-brand-dark-blue hover:text-brand-light-teal font-bold text-sm uppercase">INICIO</a>
+                        <a href="#destacados" class="text-brand-dark-blue hover:text-brand-light-teal font-bold text-sm uppercase">DESTACADOS</a>
+                        <a href="#grupales" class="text-brand-dark-blue hover:text-brand-light-teal font-bold text-sm uppercase">GRUPALES</a>
+                        <a href="#busca-destino" class="text-brand-dark-blue hover:text-brand-light-teal font-bold text-sm uppercase">DESTINOS</a>
+                        <a href="#quinceaneras" class="text-brand-dark-blue hover:text-brand-light-teal font-bold text-sm uppercase">QUINCEAÑERAS</a>
+                        <a href="#nosotros" class="text-brand-dark-blue hover:text-brand-light-teal font-bold text-sm uppercase">NOSOTROS</a>
+                        <a href="#contacto" class="text-brand-dark-blue hover:text-brand-light-teal font-bold text-sm uppercase">CONTACTO</a>
+                    </div>
+                </nav>
+
+                <div id="header-actions" class="hidden lg:flex items-center space-x-4 header-actions flex-shrink-0">
+                    <a href="https://wa.me/+543476606001" target="_blank" class="text-brand-dark-blue hover:text-green-500">
+                        <i class="fab fa-whatsapp text-2xl"></i>
+                    </a>
+                    <span id="auth-links"></span>
+                </div>
+                
+                <div class="lg:hidden">
+                    <button id="mobile-menu-button" class="text-gray-600 focus:outline-none">
+                        <i class="fa fa-bars text-3xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+         <div id="mobile-menu" class="hidden lg:hidden px-6 pb-4 border-t bg-white">
+            <a href="#" class="block py-2 text-sm text-gray-700 hover:bg-brand-light-teal hover:text-brand-dark-blue rounded">INICIO</a>
+            <a href="#destacados" class="block py-2 text-sm text-gray-700 hover:bg-brand-light-teal hover:text-brand-dark-blue rounded">DESTACADOS</a>
+            <a href="#grupales" class="block py-2 text-sm text-gray-700 hover:bg-brand-light-teal hover:text-brand-dark-blue rounded">GRUPALES</a>
+            <a href="#busca-destino" class="block py-2 text-sm text-gray-700 hover:bg-brand-light-teal hover:text-brand-dark-blue rounded">DESTINOS</a>
+            <a href="quinceaneras" class="block py-2 text-sm text-gray-700 hover:bg-brand-light-teal hover:text-brand-dark-blue rounded">QUINCEAÑERAS</a>
+            <a href="#nosotros" class="block py-2 text-sm text-gray-700 hover:bg-brand-light-teal hover:text-brand-dark-blue rounded">NOSOTROS</a>
+            <a href="#contacto" class="block py-2 text-sm text-gray-700 hover:bg-brand-light-teal hover:text-brand-dark-blue rounded">CONTACTO</a>
+            <div class="mt-4 border-t pt-4 flex items-center space-x-4">
+                 <a href="https://wa.me/5493416790064" target="_blank" class="text-brand-dark-blue hover:text-green-500"><i class="fab fa-whatsapp text-2xl"></i></a>
+                 <span id="auth-links-mobile"></span>
+            </div>
+        </div>
+    </header>
+    
+    <section class="bg-white py-4 mt-4"> 
+    <div class="container mx-auto px-6">
+        <form id="search-form" class="bg-brand-dark-blue rounded-full flex items-center h-12 overflow-hidden text-xs sm:text-sm">
+            <label for="search-input" class="bg-brand-dark-blue text-white font-bold uppercase h-full px-4 sm:px-6 flex-shrink-0 rounded-l-full flex items-center">DESTINO</label>
+            <div class="flex-grow h-full">
+                <input type="text" id="search-input" name="query" placeholder="¿A dónde querés ir?" class="bg-brand-dark-blue w-full h-full px-4 text-white placeholder-gray-300 focus:outline-none border-none">
+            </div>
+            <button type="submit" class="bg-brand-beige text-brand-dark-blue font-bold uppercase h-full px-4 sm:px-6 flex-shrink-0 rounded-r-full">BUSCAR</button>
+        </form>
+    </div>
+</section>
+    <main>
+        <section class="hero-container">
+            <div class="hero-shape">
+                <video class="hero-video" autoplay loop muted playsinline>
+                    <source src="recursos/VIDEO INICIO.mp4" type="video/mp4">
+                </video>
+                <div class="hero-overlay"></div>
+            </div>
+            <div class="hero-text-container">
+                <p class="text-lg md:text-2xl font-semibold tracking-widest uppercase">Desde 2008</p>
+                <h1 class="text-4xl sm:text-5xl md:text-7xl font-bold mt-2 drop-shadow-lg uppercase">Cumpliendo Sueños</h1>
+            </div>
+        </section>
+        
+        <section id="destacados" class="py-16 bg-white">
+            <div class="container mx-auto px-6">
+                <h2 class="text-3xl md:text-4xl font-bold text-center text-brand-dark-blue uppercase">DESTACADOS</h2>
+                <div class="section-divider"></div>
+                
+                <div id="destacados-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-8">
+                    </div>
+                <div class="text-center mt-12">
+                    <a href="destacados.html" class="bg-brand-dark-blue text-white font-bold py-3 px-8 rounded-full hover:bg-opacity-90 transition text-lg uppercase inline-block">Ver Todas</a>
+                </div>
+            </div>
+        </section>
+        
+        <section id="grupales" class="py-16 bg-white">
+            <div class="container mx-auto px-6">
+                <h2 class="text-3xl md:text-4xl font-bold text-center text-brand-dark-blue uppercase">Salidas Grupales</h2>
+                <div class="section-divider"></div>
+
+                <div class="swiper-container banner-grupales-slider mt-8 rounded-lg overflow-hidden">
+                    <div class="swiper-wrapper">
+                        </div>
+                    <div class="swiper-pagination"></div>
+                    <div class="swiper-button-prev"></div>
+                    <div class="swiper-button-next"></div>
+                </div>
+                
+                <div class="mt-16 text-center">
+                    <p class="text-lg text-brand-dark-blue font-semibold">Nuestras SALIDAS GRUPALES son una EXPERIENCIA ÚNICA, te contamos lo que ofrecemos:</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12 text-center">
+                        <div>
+                            <div class="text-5xl text-brand-light-teal"><i class="fas fa-users"></i></div>
+                            <h4 class="font-bold text-brand-dark-blue mt-4 uppercase">ACOMPAÑAMIENTO DE PERSONAL TERRAQUIO</h4>
+                            <p class="text-sm text-gray-600 mt-2">Personal especializado que conoce el destino. Asistencia en caso de imprevistos o emergencias.</p>
+                        </div>
+                         <div>
+                            <div class="text-5xl text-brand-light-teal"><i class="fas fa-clipboard-list"></i></div>
+                            <h4 class="font-bold text-brand-dark-blue mt-4 uppercase">ORGANIZACIÓN COMPLETA</h4>
+                            <p class="text-sm text-gray-600 mt-2">La agencia se encarga de planificar el itinerario, los traslados, el hospedaje y las actividades. Ahorrá tiempo.</p>
+                        </div>
+                         <div>
+                            <div class="text-5xl text-brand-light-teal"><i class="fas fa-user-friends"></i></div>
+                            <h4 class="font-bold text-brand-dark-blue mt-4 uppercase">VIAJAR EN GRUPO</h4>
+                            <p class="text-sm text-gray-600 mt-2">Oportunidad de conocer nuevas personas y compartir experiencias. Ideal para quienes no quieren viajar solos.</p>
+                        </div>
+                         <div>
+                            <div class="text-5xl text-brand-light-teal"><i class="fas fa-couch"></i></div>
+                            <h4 class="font-bold text-brand-dark-blue mt-4 uppercase">MÁS RELAX</h4>
+                            <p class="text-sm text-gray-600 mt-2">No tienes que preocuparte por los detalles logísticos. Solo te dedicas a disfrutar del viaje.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="grupales-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-12">
+                    </div>
+
+                <div class="text-center mt-12">
+                    <a href="grupales.html" class="bg-brand-dark-blue text-white font-bold py-3 px-8 rounded-full hover:bg-opacity-90 transition text-lg uppercase inline-block">Ver Todas</a>
+                </div>
+            </div>
+        </section>
+        
+        <section id="busca-destino" class="py-16 bg-white">
+            <div class="container mx-auto px-6">
+                <h2 class="text-3xl md:text-4xl font-bold text-center text-brand-dark-blue uppercase">¡BUSCÁ TU DESTINO!</h2>
+                <div class="section-divider"></div>
+                
+                <div class="relative swiper-destinos-container mt-8 overflow-hidden">
+                    <div class="swiper-container swiper-destinos h-80">
+                        <div class="swiper-wrapper" id="destinos-container"></div>
+                        </div>
+                        <div class="swiper-button-next"></div>
+                        <div class="swiper-button-prev"></div>
+                        </div>
+                        
+            </div>
+        </section>
+
+        <section id="operadores" class="py-3 bg-brand-neutral mb-16">
+            <div class="container mx-auto px-6 text-center">
+                <h3 class="text-xl font-bold text-brand-dark-blue uppercase mb-8">Nuestros Operadores</h3>
+                <div class="section-divider"></div>
+                <div class="scroller">
+                    <div class="scroller__inner">
+                        <img src="recursos/LOGOS PARA ROTADOR - EMPRESAS CON LAS QUE TRABAJAMOS/ROTADORES-01.png" alt="Logo de Coris" class="h-16 mx-8">
+                        <img src="recursos/LOGOS PARA ROTADOR - EMPRESAS CON LAS QUE TRABAJAMOS/ROTADORES-02.png" alt="Logo de Assist Card" class="h-16 mx-8">
+                        <img src="recursos/LOGOS PARA ROTADOR - EMPRESAS CON LAS QUE TRABAJAMOS/ROTADORES-03.png" alt="Logo de Pedraza" class="h-16 mx-8">
+                        <img src="recursos/LOGOS PARA ROTADOR - EMPRESAS CON LAS QUE TRABAJAMOS/ROTADORES-04.png" alt="Logo de Low" class="h-16 mx-8">
+                        <img src="recursos/LOGOS PARA ROTADOR - EMPRESAS CON LAS QUE TRABAJAMOS/ROTADORES-05.png" alt="Logo de Ola" class="h-16 mx-8">
+                        <img src="recursos/LOGOS PARA ROTADOR - EMPRESAS CON LAS QUE TRABAJAMOS/ROTADORES-06.png" alt="Logo de Estec" class="h-16 mx-8">
+                        <img src="recursos/LOGOS PARA ROTADOR - EMPRESAS CON LAS QUE TRABAJAMOS/ROTADORES-07.png" alt="Logo de Mabler" class="h-16 mx-8">
+                        <img src="recursos/LOGOS PARA ROTADOR - EMPRESAS CON LAS QUE TRABAJAMOS/ROTADORES-08.png" alt="Logo de Turistore" class="h-16 mx-8">
+                        <img src="recursos/LOGOS PARA ROTADOR - EMPRESAS CON LAS QUE TRABAJAMOS/ROTADORES-09.png" alt="Logo de Operador 9" class="h-16 mx-8">
+                        <img src="recursos/LOGOS PARA ROTADOR - EMPRESAS CON LAS QUE TRABAJAMOS/ROTADORES-10.png" alt="Logo de Operador 10" class="h-16 mx-8">
+                        <img src="recursos/LOGOS PARA ROTADOR - EMPRESAS CON LAS QUE TRABAJAMOS/ROTADORES-11.png" alt="Logo de Operador 11" class="h-16 mx-8">
+                        <img src="recursos/LOGOS PARA ROTADOR - EMPRESAS CON LAS QUE TRABAJAMOS/ROTADORES-12.png" alt="Logo de Operador 12" class="h-16 mx-8">
+                        <img src="recursos/LOGOS PARA ROTADOR - EMPRESAS CON LAS QUE TRABAJAMOS/ROTADORES-13.png" alt="Logo de Operador 13" class="h-16 mx-8">
+                        <img src="recursos/LOGOS PARA ROTADOR - EMPRESAS CON LAS QUE TRABAJAMOS/ROTADORES-14.png" alt="Logo de Operador 14" class="h-16 mx-8">
+                        <img src="recursos/LOGOS PARA ROTADOR - EMPRESAS CON LAS QUE TRABAJAMOS/ROTADORES-15.png" alt="Logo de Operador 15" class="h-16 mx-8">
+                        <img src="recursos/LOGOS PARA ROTADOR - EMPRESAS CON LAS QUE TRABAJAMOS/ROTADORES-16.png" alt="Logo de Operador 16" class="h-16 mx-8">
+                        <img src="recursos/LOGOS PARA ROTADOR - EMPRESAS CON LAS QUE TRABAJAMOS/ROTADORES-17.png" alt="Logo de Operador 17" class="h-16 mx-8">
+                        <img src="recursos/LOGOS PARA ROTADOR - EMPRESAS CON LAS QUE TRABAJAMOS/ROTADORES-18.png" alt="Logo de Operador 18" class="h-16 mx-8">
+                        <img src="recursos/LOGOS PARA ROTADOR - EMPRESAS CON LAS QUE TRABAJAMOS/ROTADORES-19.png" alt="Logo de Operador 19" class="h-16 mx-8">
+                        <img src="recursos/LOGOS PARA ROTADOR - EMPRESAS CON LAS QUE TRABAJAMOS/ROTADORES-20.png" alt="Logo de Operador 20" class="h-16 mx-8">
+                        <img src="recursos/LOGOS PARA ROTADOR - EMPRESAS CON LAS QUE TRABAJAMOS/ROTADORES-21.png" alt="Logo de Operador 21" class="h-16 mx-8">
+                        <img src="recursos/LOGOS PARA ROTADOR - EMPRESAS CON LAS QUE TRABAJAMOS/ROTADORES-22.png" alt="Logo de Operador 22" class="h-16 mx-8">
+                        <img src="recursos/LOGOS PARA ROTADOR - EMPRESAS CON LAS QUE TRABAJAMOS/ROTADORES-23.png" alt="Logo de Operador 23" class="h-16 mx-8">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="quinceaneras" class="bg-white pb-16">
+    <div class="bg-brand-dark-blue text-white quinces-section-shape">
+        <div class="container mx-auto px-6 pt-16 pb-24">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="text-center md:text-justify">
+                    <h2 class="text-amarillo text-4xl font-bold text-center">QUINCEAÑERAS</h2>
+                    <div class="section-divider"></div>
+                    <div class="mt-6 max-w-sm mx-auto">
+                        <p class="text-white text-lg">Nuestros programas para quinceañeras están diseñados para ofrecer un viaje distinto en una etapa tan especial. Contamos con cinco opciones, todas con base en Disney que pueden combinarse con otros destinos. Como también programas a Europa. </p>
+                        <p class="text-white text-lg mt-4">Se tratan de salidas personalizadas y en grupos reducidos, acompañadas por un equipo de profesionales calificados y con una alta experiencia quienes cuidan cada detalle durante todo el viaje. </p>
+                        <p class="text-white text-lg mt-4">¡Vivamos juntos esta experiencia única!</p>
+                    </div>
+                </div>
+                
+                <div class="relative w-full max-w-lg mx-auto">
+                    <div class="swiper-container quinceaneras-slider h-96 rounded-lg overflow-hidden shadow-lg">
+                        <div class="swiper-wrapper" id="quinceaneras-slider-wrapper">       
+                        </div>
+                        <div class="swiper-button-prev"></div>
+                        <div class="swiper-button-next"></div>
+                        <div class="swiper-pagination"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="container mx-auto px-6 text-center -mt-20 relative z-10">
+         <a href="quinceaneras.html" class="bg-brand-neutral text-brand-dark-blue font-bold py-3 px-8 rounded-full border-2 border-brand-dark-blue hover:bg-brand-beige transition text-lg uppercase shadow-lg inline-block">Más Info</a>
+    </div>
+</section>
+
+        <section id="eventos" class="py-16 bg-white">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-3xl md:text-4xl font-bold text-center text-brand-dark-blue uppercase">EVENTOS IMPERDIBLES</h2>
+                <div class="section-divider"></div>
+                <p class="text-lg text-brand-dark-blue font-bold mt-4 max-w-3xl mx-auto">Viví los mejores eventos del mundo, disfrutá de recitales, espectáculos y experiencias deportivas únicas. ¡Vos lo elegís, nosotros te llevamos!</p>
+                <div id="eventos-container" class="flex flex-wrap justify-center gap-8 mt-8">
+                </div>
+            </div>
+        </section>
+
+        <section id="nosotros" class="py-8 bg-brand-beige">
+            <div class="container mx-auto px-6">
+                <h2 class="text-3xl md:text-4xl font-bold text-center text-brand-dark-blue uppercase">NOS PODES ENCONTRAR EN</h2>
+                <div class="section-divider"></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left mt-4">
+                    <div>
+                        <h3 class="font-bold text-base md:text-lg text-brand-dark-blue">CASA CENTRAL SAN LORENZO (2200): <span class="font-normal">H. Irigoyen 1877</span></h3>
+                        <p class="mt-1 text-xs text-brand-dark-blue font-bold">HORARIOS: <span class="font-normal">LUNES A VIERNES DE 9:00 A 17:00 HS</span></p>
+                        <div class="mt-2 rounded-lg overflow-hidden shadow-xl">
+                            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3354.120935544473!2d-60.73815098481751!3d-32.8166564809668!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95b6a36d933e4331%3A0x6b12a8f8b898b3a0!2sHip%C3%B3lito%20Yrigoyen%201877%2C%20S2200%20San%20Lorenzo%2C%20Santa%20Fe!5e0!3m2!1ses-419!2sar!4v1678886408215!5m2!1ses-419!2sar" width="100%" height="250" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base md:text-lg text-brand-dark-blue">SUCURSAL FUNES (2132): <span class="font-normal">Santa Fe 1758 | LOCAL 12</span></h3>
+                        <p class="mt-1 text-xs text-brand-dark-blue font-bold">HORARIOS: <span class="font-normal">L-V: 9-13 y 15-19 | SÁB: 10-13</span></p>
+                        <div class="mt-2 rounded-lg overflow-hidden shadow-xl">
+                            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3348.196328325605!2d-60.81230188481358!3d-32.94639918092146!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95b651de3885d555%3A0x51c72551648a7d4a!2sSanta%20Fe%201758%2C%20S2132%20Funes%2C%20Santa%20Fe!5e0!3m2!1ses-419!2sar!4v1678886475654!5m2!1ses-419!2sar" width="100%" height="250" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer id="contacto" class="bg-brand-dark-blue text-white mt-16">
+        <div class="container mx-auto px-6 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
+                <div class="mb-6 md:mb-0">
+                    <h3 class="text-2xl font-bold">terraquio</h3>
+                    <p class="text-sm text-gray-400 mt-1">Empresa de Viajes y Turismo Leg. 12345</p>
+                    <p class="mt-4 text-gray-300"><i class="fas fa-map-marker-alt mr-2"></i>H. Irigoyen 1877, San Lorenzo, Santa Fe, Argentina</p>
+                    <p class="mt-2 text-gray-300"><i class="fas fa-phone mr-2"></i>+54 341 679-0064</p>
+                </div>
+                <div class="mb-6 md:mb-0">
+                    <h4 class="font-bold text-lg">Accesos Rápidos</h4>
+                    <ul class="mt-4 space-y-2">
+                        <li><a href="index.html#destacados" class="text-gray-300 hover:text-white">Destacados</a></li>
+                        <li><a href="#busca-destino" class="text-gray-300 hover:text-white">Destinos</a></li>
+                        <li><a href="index.html#grupales" class="text-gray-300 hover:text-white">Salidas Grupales</a></li>
+                        <li><a href="index.html#contacto" class="text-gray-300 hover:text-white">Contacto</a></li>
+                    </ul>
+                </div>
+                <div class="mb-6 md:mb-0">
+                    <h4 class="font-bold text-lg">Otros Enlaces</h4>
+                    <ul class="mt-4 space-y-2">
+                        <li><a href="#" class="text-gray-300 hover:text-white">Ministerio de Turismo</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white">Declaración de Manifiestos</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white">Acceso Agente</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-lg">Seguinos</h4>
+                    <div class="flex space-x-4 mt-4 justify-center md:justify-start">
+                        <a href="#" class="text-gray-300 hover:text-white text-2xl"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-gray-300 hover:text-white text-2xl"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-gray-300 hover:text-white text-2xl"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-gray-300 hover:text-white text-2xl"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-6 text-center text-sm text-gray-400">
+                <p>© 2025 Terraquio Viajes. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <div id="termsConditionsModal" class="terms-modal hidden">
+        <div class="terms-modal-content bg-white p-6 rounded-lg shadow-xl relative">
+            <span class="terms-close-button absolute top-2 right-4 text-gray-600 hover:text-gray-900 cursor-pointer text-3xl">×</span>
+            <h3 class="text-2xl font-bold text-brand-dark-blue mb-4 text-center">Términos y Condiciones</h3>
+            <p class="text-gray-700 mb-4 text-center">Para continuar con la solicitud de reserva, por favor, acepta nuestros términos y condiciones.</p>
+            <div class="flex items-center mb-6 justify-center">
+                <input type="checkbox" id="acceptTerms" class="form-checkbox h-5 w-5 text-blue-600">
+                <label for="acceptTerms" class="ml-2 text-gray-800 text-sm">Acepto los <a href="terminos-condiciones.html" target="_blank" class="text-blue-600 hover:underline font-semibold">Términos y Condiciones</a></label>
+            </div>
+            <div class="flex justify-center">
+                <button id="confirmReserveButton" class="bg-brand-dark-blue text-white font-bold py-2 px-6 rounded-full hover:bg-opacity-90 transition text-sm uppercase opacity-50 cursor-not-allowed" disabled>Confirmar Solicitud</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+    <a href="https://wa.me/543476606001" class="whatsapp-float" target="_blank">
+    <i class="fa-brands fa-whatsapp"></i>
+</a>
+</body>
+</html>
