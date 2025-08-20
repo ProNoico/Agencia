@@ -147,7 +147,6 @@ async function loadQuinceanerasSlider() {
         },
     });
 }
-// --- NUEVA LÓGICA DE BÚSQUEDA ---
 // --- NUEVA LÓGICA DE BÚSQUEDA (MEJORADA) ---
 async function performSearch() {
     const params = new URLSearchParams(window.location.search);
@@ -216,38 +215,6 @@ async function performSearch() {
         resultsContainer.innerHTML = `<p class="text-gray-600 text-center col-span-full">No se encontraron paquetes que coincidan con tu búsqueda.</p>`;
     }
 }
-
-
-// --- INICIALIZACIÓN ---
-document.addEventListener('DOMContentLoaded', () => {
-    // Lógica para decidir qué funciones ejecutar dependiendo de la página
-    if (window.location.pathname.includes('search-results.html')) {
-        performSearch();
-    } else if (window.location.pathname.includes('paquetes-destino.html')) {
-        loadRegionPackages();
-    } else {
-        // Se ejecuta en index.html
-        const searchForm = document.getElementById('search-form');
-        if (searchForm) {
-            searchForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const query = document.getElementById('search-input').value;
-                if (query) {
-                    window.location.href = `search-results.html?query=${encodeURIComponent(query)}`;
-                }
-            });
-        }
-        
-        // ... (resto de las funciones de inicialización de la página principal)
-        const packageLimit = window.innerWidth < 768 ? 4 : 8;
-        cargarPaquetes('destacados', destacadosContainer, packageLimit);
-        cargarPaquetes('grupales', grupalesContainer, packageLimit);
-        cargarEventos();
-        loadQuinceanerasSlider();
-        loadGroupBanners();
-        loadDestinationsCarousel();
-    }
-});
 
 // --- LÓGICA PARA CARGAR BANNERS DE SALIDAS GRUPALES ---
 async function loadGroupBanners() {
@@ -327,7 +294,6 @@ async function loadDestinationsCarousel() {
      new Swiper('.swiper-destinos', {
         slidesPerView: 2,
         spaceBetween: 10,
-        // Puede que tengas 'breakpoints' aquí
         breakpoints: {
             640: { slidesPerView: 3, spaceBetween: 20 },
             768: { slidesPerView: 4, spaceBetween: 30 },
@@ -337,15 +303,12 @@ async function loadDestinationsCarousel() {
             nextEl: '#busca-destino .swiper-button-next',
             prevEl: '#busca-destino .swiper-button-prev',
         },
-
-        // --- AÑADIR ESTAS LÍNEAS ---
-        loop: true, // Para que el carrusel sea infinito
-        speed: 2000, // Velocidad de la transición en milisegundos (2 segundos)
+        loop: true,
+        speed: 2000,
         autoplay: {
-            delay: 1, // El delay entre transiciones, lo ponemos casi a 0
-            disableOnInteraction: false, // El autoplay no se detiene si el usuario interactúa
+            delay: 1,
+            disableOnInteraction: false,
         },
-        // --- FIN DE LAS LÍNEAS A AÑADIR ---
     });
 }
 
@@ -420,11 +383,77 @@ async function loadRegionPackages() {
     }
 }
 
-// --- INICIALIZACIÓN ---
-document.addEventListener('DOMContentLoaded', () => {
-    if (window.location.pathname.includes('paquetes-destino.html')) {
-        loadRegionPackages();
+// --- LÓGICA PARA PÁGINA "NOSOTROS" ---
+async function loadNosotrosPage() {
+    const textoContainer = document.getElementById('nosotros-texto');
+    const galeriaContainer = document.getElementById('nosotros-galeria');
+
+    if (!textoContainer || !galeriaContainer) return;
+
+    // Cargar texto
+    const { data: textoData, error: textoError } = await supabase
+        .from('nosotros_content')
+        .select('content')
+        .eq('id', 1)
+        .single();
+    
+    if (textoError) {
+        textoContainer.innerHTML = `<p class="text-red-500">Error al cargar el contenido.</p>`;
     } else {
+        textoContainer.innerHTML = textoData.content;
+    }
+
+    // Cargar imágenes
+    const { data: galeriaData, error: galeriaError } = await supabase
+        .from('nosotros_gallery_images')
+        .select('*')
+        .order('orden', { ascending: true });
+
+    if (galeriaError) {
+        galeriaContainer.innerHTML = `<p class="text-red-500 col-span-full">Error al cargar las imágenes.</p>`;
+    } else if (galeriaData && galeriaData.length > 0) {
+        galeriaContainer.innerHTML = galeriaData.map(img => `
+            <div class="rounded-lg overflow-hidden shadow-lg">
+                <img src="${img.imagen_url}" alt="${img.alt_text}" class="w-full h-full object-cover aspect-[4/3]">
+            </div>
+        `).join('');
+    } else {
+        galeriaContainer.innerHTML = `<p class="text-gray-500 col-span-full">No hay imágenes en la galería.</p>`;
+    }
+}
+
+
+// --- INICIALIZACIÓN GENERAL ---
+document.addEventListener('DOMContentLoaded', () => {
+    const pathname = window.location.pathname;
+
+    if (pathname.includes('nosotros.html')) {
+        loadNosotrosPage();
+    } else if (pathname.includes('search-results.html')) {
+        performSearch();
+    } else if (pathname.includes('paquetes-destino.html')) {
+        loadRegionPackages();
+    } else if (pathname.includes('index.html') || pathname === '/') {
+        // Funciones específicas de la página de inicio
+        const searchForm = document.getElementById('search-form');
+        if (searchForm) {
+            searchForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const query = document.getElementById('search-input').value;
+                if (query) {
+                    window.location.href = `search-results.html?query=${encodeURIComponent(query)}`;
+                }
+            });
+        }
+        
+        const packageLimit = window.innerWidth < 768 ? 4 : 8;
+        cargarPaquetes('destacados', destacadosContainer, packageLimit);
+        cargarPaquetes('grupales', grupalesContainer, packageLimit);
+        cargarEventos();
+        loadQuinceanerasSlider();
+        loadGroupBanners();
+        loadDestinationsCarousel();
+
         const scrollerInner = document.querySelector(".scroller__inner");
         if (scrollerInner) {
             const scrollerContent = Array.from(scrollerInner.children);
@@ -434,15 +463,5 @@ document.addEventListener('DOMContentLoaded', () => {
                 scrollerInner.appendChild(duplicatedItem);
             });
         }
-        
-        const isMobile = window.innerWidth < 768;
-        const packageLimit = isMobile ? 4 : 8;
-
-        cargarPaquetes('destacados', destacadosContainer, packageLimit);
-        cargarPaquetes('grupales', grupalesContainer, packageLimit);
-        cargarEventos();
-        loadQuinceanerasSlider();
-        loadGroupBanners();
-        loadDestinationsCarousel();
     }
 });

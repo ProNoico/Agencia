@@ -107,7 +107,7 @@ body {
 .banner-grupales-slider .swiper-slide {
     position: relative;
     display: flex;
-    align-items: center;
+    align-items: center; /* Esto es lo que lo centra verticalmente por defecto */
     justify-content: center;
 }
 .banner-grupales-slider .swiper-button-next,
@@ -227,3 +227,51 @@ LA SIGUIENTE REGLA HA SIDO ELIMINADA PARA QUITAR EL SUBRAYADO
 section[id] {
   scroll-margin-top: 100px; /* Ajusta este valor si es necesario */
 }
+
+/* --- INICIO DE MODIFICACIONES PARA SALIDAS GRUPALES (Solución Definitiva) --- */
+
+/* Asegura que la imagen dentro del slide no tenga opacidad ni filtros */
+.banner-grupales-slider .swiper-slide img {
+    filter: none !important;
+    opacity: 1 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+
+/* Reposicionar el texto del banner */
+.banner-grupales-slider .swiper-slide .juntos-text {
+    position: absolute !important; /* Es crucial que sea 'absolute' para posicionar con 'bottom' */
+    bottom: 40px !important; /* Posiciona el texto a 40px del borde inferior. Ajusta si es necesario. */
+    left: 50% !important; /* Centra horizontalmente */
+    transform: translateX(-50%) !important; /* Ajusta para un centrado perfecto */
+    top: unset !important; /* Deshabilita cualquier centrado vertical previo */
+
+    /* Asegurar visibilidad y formato */
+    color: white !important; /* Color blanco para que se vea bien sobre la imagen sin oscurecimiento */
+    text-align: center !important;
+    width: 90% !important; /* Controla el ancho del texto */
+    max-width: 700px !important; /* Limita el ancho en pantallas grandes */
+    
+    /* Eliminar posibles interferencias de Tailwind u otros estilos */
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    z-index: 100 !important; /* Asegura que el texto esté siempre por encima */
+    background: transparent !important; /* Elimina cualquier fondo del texto */
+}
+
+/* Asegura que los puntitos de paginación de Swiper estén visibles y en su lugar */
+.banner-grupales-slider .swiper-pagination {
+    bottom: 10px !important; /* Posiciona los puntitos a 10px del borde inferior */
+    z-index: 101 !important; /* Asegura que estén por encima del texto */
+}
+
+/* Asegura que las flechas de navegación sean visibles y estén en frente */
+.banner-grupales-slider .swiper-button-next,
+.banner-grupales-slider .swiper-button-prev {
+    color: white !important; /* Mantén el color blanco para las flechas */
+    z-index: 102 !important; /* Más alto que todo lo demás */
+}
+
+/* --- FIN DE MODIFICACIONES PARA SALIDAS GRUPALES (Solución Definitiva) --- */

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-gray-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Nosotros - Terraquio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .modal-backdrop { transition: opacity 0.3s ease; }
+        .drop-zone.drag-over { border-color: #3b82f6; background-color: #eff6ff; }
+    </style>
+</head>
+<body class="h-full">
+    <div class="min-h-full">
+        <header class="bg-white shadow-sm">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-gray-900 py-6">Gestión de Página "Nosotros"</h1>
+                    <a href="dashboard.html" class="text-sm text-indigo-600 hover:text-indigo-900">&larr; Volver al panel principal</a>
+                </div>
+                <button id="logout-button" class="rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500">Cerrar Sesión</button>
+            </div>
+        </header>
+
+        <main class="py-10">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
+                
+                <div class="bg-white shadow-sm sm:rounded-lg p-6">
+                    <h2 class="text-base font-semibold leading-6 text-gray-900">Texto Principal</h2>
+                    <p class="mt-1 text-sm text-gray-500">Edita el texto de la sección "¿Quiénes somos?". Para poner texto en negrita, enciérralo en etiquetas &lt;strong&gt;...&lt;/strong&gt;.</p>
+                    <div class="mt-4">
+                        <textarea id="nosotros-text-input" rows="10" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button id="save-text-btn" type="button" class="rounded-md bg-[#033E4C] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-opacity-90">Guardar Texto</button>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="sm:flex sm:items-center">
+                        <div class="sm:flex-auto">
+                            <h2 class="text-base font-semibold leading-6 text-gray-900">Imágenes de Galería</h2>
+                            <p class="mt-2 text-sm text-gray-700">Gestiona las imágenes que aparecen en la página "Nosotros".</p>
+                        </div>
+                        <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+                            <button type="button" id="add-image-button" class="block rounded-md bg-[#033E4C] px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-opacity-90">Añadir Imagen</button>
+                        </div>
+                    </div>
+                    <div class="mt-8 flow-root">
+                        <div class="inline-block min-w-full py-2 align-middle">
+                            <table class="min-w-full divide-y divide-gray-300">
+                                <thead>
+                                    <tr>
+                                        <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">Orden</th>
+                                        <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Imagen</th>
+                                        <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Texto Alternativo</th>
+                                        <th class="relative py-3.5 pl-3 pr-4"><span class="sr-only">Acciones</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="gallery-images-table-body" class="divide-y divide-gray-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="image-modal" class="relative z-10 hidden" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 modal-backdrop"></div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                    <form id="image-form">
+                        <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                            <h3 class="text-lg font-semibold leading-6 text-gray-900" id="image-modal-title">Añadir Imagen</h3>
+                            <div class="mt-4 grid grid-cols-1 gap-y-6">
+                                <input type="hidden" id="image-id" name="id">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Archivo de Imagen</label>
+                                    <div id="drop-zone" class="drop-zone mt-1 flex justify-center rounded-lg border-2 border-dashed border-gray-300 px-6 py-10 cursor-pointer">
+                                        <div class="text-center">
+                                            <p class="mt-1 text-sm text-gray-600">Arrastra una imagen o <span class="font-semibold text-indigo-600">haz clic</span></p>
+                                            <input id="file-input" type="file" class="sr-only" accept="image/*">
+                                        </div>
+                                    </div>
+                                    <p id="upload-status" class="mt-2 text-sm text-gray-500"></p>
+                                    <img id="image-preview" src="" class="mt-4 rounded-lg max-h-40 hidden">
+                                </div>
+                                <div>
+                                    <label for="imagen_url" class="block text-sm font-medium text-gray-700">URL de la Imagen</label>
+                                    <input type="url" name="imagen_url" id="imagen_url" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border">
+                                </div>
+                                <div>
+                                    <label for="alt_text" class="block text-sm font-medium text-gray-700">Texto Alternativo (descriptivo)</label>
+                                    <input type="text" name="alt_text" id="alt_text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border">
+                                </div>
+                                <div>
+                                    <label for="orden" class="block text-sm font-medium text-gray-700">Orden</label>
+                                    <input type="number" name="orden" id="orden" value="0" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                            <button type="submit" class="inline-flex w-full justify-center rounded-md bg-[#033E4C] px-3 py-2 text-sm font-semibold text-white shadow-sm sm:ml-3 sm:w-auto">Guardar Imagen</button>
+                            <button type="button" id="cancel-image-button" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm sm:mt-0 sm:w-auto ring-1 ring-inset ring-gray-300">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    const SUPABASE_URL = 'https://rwndahfhxxasuwycfjug.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3bmRhaGZoeHhhc3V3eWNmanVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwMzA3MjUsImV4cCI6MjA2ODYwNjcyNX0.gZCP_LDl_WDqnhIIDHdqa-kWsDkYpxJ6RQxZcPtC0ZQ';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // --- Elementos del DOM ---
+    const logoutButton = document.getElementById('logout-button');
+    const nosotrosTextInput = document.getElementById('nosotros-text-input');
+    const saveTextBtn = document.getElementById('save-text-btn');
+    const galleryImagesTableBody = document.getElementById('gallery-images-table-body');
+    const addImageButton = document.getElementById('add-image-button');
+    const imageModal = document.getElementById('image-modal');
+    const imageForm = document.getElementById('image-form');
+    const cancelImageButton = document.getElementById('cancel-image-button');
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const uploadStatus = document.getElementById('upload-status');
+    const imagePreview = document.getElementById('image-preview');
+    
+    let galleryImagesData = [];
+
+    // --- Auth ---
+    const checkAdmin = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) { window.location.href = './index.html'; return; }
+        const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+        if (profile?.role !== 'admin') {
+            alert("Acceso denegado.");
+            window.location.href = './index.html';
+        }
+    };
+
+    // --- Gestión de Texto ---
+    const fetchNosotrosContent = async () => {
+        const { data, error } = await supabase
+            .from('nosotros_content')
+            .select('content')
+            .eq('id', 1)
+            .single();
+        
+        if (data) {
+            nosotrosTextInput.value = data.content;
+        } else {
+            // Si no hay contenido, inserta un valor por defecto para que el registro exista
+            await supabase.from('nosotros_content').insert([{ id: 1, content: 'Escribe tu historia aquí.' }]);
+            nosotrosTextInput.value = 'Escribe tu historia aquí.';
+        }
+    };
+
+    saveTextBtn.addEventListener('click', async () => {
+        const newContent = nosotrosTextInput.value;
+        const { error } = await supabase
+            .from('nosotros_content')
+            .update({ content: newContent })
+            .eq('id', 1);
+
+        if (error) {
+            alert('Error al guardar el texto: ' + error.message);
+        } else {
+            alert('Texto guardado con éxito.');
+        }
+    });
+
+    // --- Gestión de Imágenes ---
+    const fetchGalleryImages = async () => {
+        const { data, error } = await supabase.from('nosotros_gallery_images').select('*').order('orden', { ascending: true });
+        if (error) { console.error('Error al cargar imágenes:', error); return; }
+        galleryImagesData = data;
+        renderGalleryImagesTable();
+    };
+
+    const renderGalleryImagesTable = () => {
+        galleryImagesTableBody.innerHTML = galleryImagesData.map(img => `
+            <tr>
+                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">${img.orden}</td>
+                <td class="px-3 py-4"><img src="${img.imagen_url}" alt="${img.alt_text}" class="h-12 w-24 object-cover rounded"></td>
+                <td class="px-3 py-4 text-sm text-gray-500 max-w-xs truncate">${img.alt_text}</td>
+                <td class="relative py-4 pl-3 pr-4 text-right text-sm font-medium">
+                    <button data-id="${img.id}" class="text-indigo-600 hover:text-indigo-900 edit-image-btn">Editar</button>
+                    <button data-id="${img.id}" class="text-red-600 hover:text-red-900 ml-4 delete-image-btn">Eliminar</button>
+                </td>
+            </tr>
+        `).join('');
+    };
+    
+    const handleImageUpload = async (file) => {
+        if (!file) return;
+        uploadStatus.textContent = 'Subiendo...';
+        const filePath = `nosotros/${Date.now()}-${file.name}`;
+        const { error } = await supabase.storage.from('imagenes-web').upload(filePath, file);
+
+        if (error) { 
+            uploadStatus.textContent = 'Error: ' + error.message; 
+            return; 
+        }
+        
+        const { data } = supabase.storage.from('imagenes-web').getPublicUrl(filePath);
+        uploadStatus.textContent = '¡Imagen subida!';
+        document.getElementById('imagen_url').value = data.publicUrl;
+        imagePreview.src = data.publicUrl;
+        imagePreview.classList.remove('hidden');
+    };
+
+    addImageButton.addEventListener('click', () => {
+        imageForm.reset();
+        imagePreview.classList.add('hidden');
+        uploadStatus.textContent = '';
+        document.getElementById('image-id').value = '';
+        document.getElementById('image-modal-title').textContent = 'Añadir Imagen';
+        imageModal.classList.remove('hidden');
+    });
+
+    cancelImageButton.addEventListener('click', () => imageModal.classList.add('hidden'));
+
+    imageForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(imageForm);
+        const imageData = {
+            imagen_url: formData.get('imagen_url'),
+            alt_text: formData.get('alt_text'),
+            orden: formData.get('orden')
+        };
+        const imageId = formData.get('id');
+
+        if (imageId) {
+            await supabase.from('nosotros_gallery_images').update(imageData).eq('id', imageId);
+        } else {
+            await supabase.from('nosotros_gallery_images').insert([imageData]);
+        }
+        imageModal.classList.add('hidden');
+        fetchGalleryImages();
+    });
+
+    galleryImagesTableBody.addEventListener('click', (e) => {
+        const id = e.target.dataset.id;
+        if (!id) return;
+        const image = galleryImagesData.find(img => img.id == id);
+        if (!image) return;
+
+        if (e.target.classList.contains('edit-image-btn')) {
+            imageForm.elements.id.value = image.id;
+            imageForm.elements.imagen_url.value = image.imagen_url;
+            imageForm.elements.alt_text.value = image.alt_text;
+            imageForm.elements.orden.value = image.orden;
+            
+            imagePreview.src = image.imagen_url;
+            imagePreview.classList.remove('hidden');
+            document.getElementById('image-modal-title').textContent = 'Editar Imagen';
+            imageModal.classList.remove('hidden');
+        }
+        if (e.target.classList.contains('delete-image-btn')) {
+            if (confirm(`¿Seguro que quieres eliminar esta imagen?`)) {
+                supabase.from('nosotros_gallery_images').delete().eq('id', id).then(() => fetchGalleryImages());
+            }
+        }
+    });
+
+    // --- Listeners de Upload ---
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => handleImageUpload(e.target.files[0]));
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', (e) => e.currentTarget.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', (e) => { e.preventDefault(); e.currentTarget.classList.remove('drag-over'); if(e.dataTransfer.files[0]) handleImageUpload(e.dataTransfer.files[0]); });
+
+    // --- Inicialización ---
+    document.addEventListener('DOMContentLoaded', async () => {
+        await checkAdmin();
+        fetchNosotrosContent();
+        fetchGalleryImages();
+        logoutButton.addEventListener('click', async () => {
+            await supabase.auth.signOut();
+            window.location.href = './index.html';
+        });
+    });
+    </script>
+</body>
+</html>
