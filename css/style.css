@@ -127,6 +127,21 @@ body {
     display: inline-block;
 }
 
+/*
+LA SIGUIENTE REGLA HA SIDO ELIMINADA PARA QUITAR EL SUBRAYADO
+.juntos-text::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 5%;
+    right: 5%;
+    height: 3px;
+    background-color: white;
+    border-radius: 2px;
+    transform: scaleX(1);
+}
+*/
+
 .quinces-section-shape {
     clip-path: polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%);
 }
@@ -211,33 +226,4 @@ body {
 /* Ajuste para el anclaje de secciones con header fijo */
 section[id] {
   scroll-margin-top: 100px; /* Ajusta este valor si es necesario */
-}
-
-
-/* --- AJUSTES PARA MÓVILES --- */
-@media (max-width: 768px) {
-    /* Reduce el tamaño del texto y el espaciado en la sección Quinceañeras */
-    #quinceaneras .quinces-section-shape .container {
-        padding-top: 3rem; /* Reduce el espaciado superior */
-        padding-bottom: 5rem; /* Reduce el espaciado inferior */
-    }
-
-    #quinceaneras h2 {
-        font-size: 2.25rem; /* Equivalente a text-4xl, más pequeño que el original */
-    }
-
-    #quinceaneras p {
-        font-size: 1rem; /* Equivalente a text-base */
-        line-height: 1.6;
-    }
-
-    /* Suaviza la forma diagonal para dar más espacio al texto */
-    .quinces-section-shape {
-        clip-path: polygon(0 0, 100% 0, 100% 90%, 50% 100%, 0 90%);
-    }
-
-    /* Asegura que el slider no sea demasiado alto en móviles */
-    .quinceaneras-slider {
-        height: 20rem; /* 320px, ajusta si es necesario */
-    }
 }
